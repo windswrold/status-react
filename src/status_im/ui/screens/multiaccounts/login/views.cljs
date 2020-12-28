@@ -13,6 +13,7 @@
             [quo.core :as quo]
             [status-im.ui.components.icons.vector-icons :as icons]
             [status-im.ui.components.toolbar :as toolbar]
+            [status-im.ui.screens.multiaccounts.sheets :as sheets]
             [status-im.ui.components.topbar :as topbar]
             [status-im.ui.components.colors :as colors])
   (:require-macros [status-im.utils.views :refer [defview letsubs]]))
@@ -20,6 +21,18 @@
 (defn login-multiaccount [^js password-text-input]
   (.blur password-text-input)
   (re-frame/dispatch [:multiaccounts.login.ui/password-input-submitted]))
+
+(defn export-database [^js password-text-input]
+  (.blur password-text-input)
+  (re-frame/dispatch [:multiaccounts.login.ui/export-db-submitted]))
+
+(defn import-database [^js password-text-input]
+  (.blur password-text-input)
+  (re-frame/dispatch [:multiaccounts.login.ui/import-db-submitted]))
+
+(defn backup-database [^js password-text-input]
+  (.blur password-text-input)
+  (re-frame/dispatch [:multiaccounts.login.ui/backup-db-submitted]))
 
 (defn multiaccount-login-badge [{:keys [public-key name] :as multiaccount}]
   [react/view styles/login-badge
@@ -45,11 +58,15 @@
             view-id [:view-id]
             supported-biometric-auth [:supported-biometric-auth]]
     [react/keyboard-avoiding-view {:style ast/multiaccounts-view}
-     [topbar/topbar {:border-bottom     false
-                     :right-accessories [{:icon     :more
-                                          :on-press #(do
-                                                       (react/dismiss-keyboard!)
-                                                       (re-frame/dispatch [:multiaccounts.recover.ui/recover-multiaccount-button-pressed]))}]}]
+     [topbar/topbar {:border-bottom false
+                     :right-accessories (when true
+                                          [{:icon                :more
+                                            :accessibility-label :advanced-import
+                                            :on-press            #(re-frame/dispatch [:bottom-sheet/show-sheet
+                                                                                      {:content (sheets/database-management-sheet
+                                                                                                 (fn [] (backup-database @password-text-input))
+                                                                                                 (fn [] (import-database @password-text-input))
+                                                                                                 (fn [] (export-database @password-text-input)))}])}])}]
      [react/scroll-view {:keyboardShouldPersistTaps :always
                          :style                     styles/login-view}
       [react/view styles/login-badge-container
@@ -97,8 +114,9 @@
         [react/i18n-text {:style styles/processing :key :processing}]])
 
      [toolbar/toolbar
-      {:size :large
-       :center
+      {:show-border? true
+       :size         :large
+       :right
        [react/view {:padding-horizontal 8}
         [quo/button
          {:disabled (or (not sign-in-enabled?) processing)

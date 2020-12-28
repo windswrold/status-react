@@ -114,14 +114,11 @@
 
 (re-frame/reg-fx
  :keychain/get-auth-method
- (fn [[key-uid callback]]
+ (fn [[_ callback]]
    (can-save-user-password?
     (fn [can-save?]
       (if can-save?
-        (get-credentials (str key-uid "-auth")
-                         #(callback (if %
-                                      (.-password ^js %)
-                                      auth-method-none)))
+        (callback nil)
         (callback nil))))))
 
 (re-frame/reg-fx

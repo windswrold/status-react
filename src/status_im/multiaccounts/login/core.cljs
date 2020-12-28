@@ -38,6 +38,16 @@
    (status/login key-uid account-data hashed-password)))
 
 (re-frame/reg-fx
+ ::export-db
+ (fn [[key-uid account-data hashed-password]]
+   (status/export-db key-uid account-data hashed-password)))
+
+(re-frame/reg-fx
+ ::import-db
+ (fn [[key-uid account-data hashed-password]]
+   (status/import-db key-uid account-data hashed-password)))
+
+(re-frame/reg-fx
  ::enable-local-notifications
  (fn []
    (status/start-local-notifications)))
@@ -86,6 +96,26 @@
                                 :key-uid    key-uid
                                 :identicon  identicon})
               (ethereum/sha3 (security/safe-unmask-data password))]}))
+
+(fx/defn export-db-submitted
+  {:events [:multiaccounts.login.ui/export-db-submitted]}
+  [{:keys [db]}]
+  (let [{:keys [key-uid password name identicon]} (:multiaccounts/login db)]
+    {::export-db [key-uid
+                  (types/clj->json {:name       name
+                                    :key-uid    key-uid
+                                    :identicon  identicon})
+                  (ethereum/sha3 (security/safe-unmask-data password))]}))
+
+(fx/defn import-db-submitted
+  {:events [:multiaccounts.login.ui/import-db-submitted]}
+  [{:keys [db]}]
+  (let [{:keys [key-uid password name identicon]} (:multiaccounts/login db)]
+    {::import-db [key-uid
+                  (types/clj->json {:name       name
+                                    :key-uid    key-uid
+                                    :identicon  identicon})
+                  (ethereum/sha3 (security/safe-unmask-data password))]}))
 
 (fx/defn finish-keycard-setup
   [{:keys [db] :as cofx}]
