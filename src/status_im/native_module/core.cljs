@@ -199,7 +199,6 @@
   (.callRPC ^js (status) payload callback))
 
 (defn call-private-rpc [payload callback]
-  (log/info "calling private rpc" payload)
   (.callPrivateRPC ^js (status) payload callback))
 
 (defn hash-transaction
