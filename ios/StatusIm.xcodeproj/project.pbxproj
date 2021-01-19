@@ -37,7 +37,6 @@
 		3AAD2AD324A3A60E0075D594 /* Inter-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 693A62DB37BC4CD5A30E5C96 /* Inter-SemiBold.otf */; };
 		3AAD2AD424A3A60E0075D594 /* Inter-SemiBoldItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = A4F2BBE8D4DD4140A6CCAC39 /* Inter-SemiBoldItalic.otf */; };
 		3ABC7AF8245FF85900612C45 /* InterStatus-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 9C76AF5A418D4D65A4CAD1D9 /* InterStatus-Regular.otf */; };
-		55156A9A25B0740200CA30BE /* libReactNativeConfig.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 55156A9725B073E900CA30BE /* libReactNativeConfig.a */; };
 		55156A9B25B0740C00CA30BE /* libReactNativeConfig.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 55156A9725B073E900CA30BE /* libReactNativeConfig.a */; };
 		57C854A7993C47A3B1AECD32 /* Inter-MediumItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = C6B1215047604CD59A4C74D6 /* Inter-MediumItalic.otf */; };
 		68E19BBDF749E72ED1F9DEF5 /* libPods-Status-StatusIm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 132CE3B093884B0FB239A0AB /* libPods-Status-StatusIm.a */; };
@@ -54,6 +53,7 @@
 		D1786306E0184916B11F4C37 /* Inter-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = B2A38FC3D3954DE7B2B171F8 /* Inter-Medium.otf */; };
 		D84616FB563A48EBB1678699 /* Inter-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = CD4A2C27D6D5473184DC1F7E /* Inter-Bold.otf */; };
 		D99C50E5E18942A39C8DDF61 /* Inter-BoldItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = B321D25F4493470980039457 /* Inter-BoldItalic.otf */; };
+		F80FEE1725B6DA58009D348C /* libReactNativeConfig.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 55156A9725B073E900CA30BE /* libReactNativeConfig.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -170,7 +170,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				55156A9A25B0740200CA30BE /* libReactNativeConfig.a in Frameworks */,
+				F80FEE1725B6DA58009D348C /* libReactNativeConfig.a in Frameworks */,
 				B24FC7FF1DE7195F00D694FF /* MessageUI.framework in Frameworks */,
 				B24FC7FD1DE7195700D694FF /* Social.framework in Frameworks */,
 				CE4E31B31D8695250033ED64 /* Statusgo.framework in Frameworks */,
