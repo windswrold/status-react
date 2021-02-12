@@ -286,6 +286,7 @@
   [cofx transfers params]
   (fx/merge cofx
             (handle-new-transfer transfers params)
+            (wallet/stop-fetching-on-empty-tx-history transfers)
             (check-ens-transactions transfers)))
 
 (fx/defn tx-fetching-failed

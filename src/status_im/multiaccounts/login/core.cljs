@@ -71,7 +71,8 @@
 
 (fx/defn initialize-wallet
   {:events [::initialize-wallet]}
-  [{:keys [db] :as cofx} accounts custom-tokens favourites new-account?]
+  [{:keys [db] :as cofx} accounts custom-tokens
+   favourites scan-all-tokens? new-account?]
   (fx/merge
    cofx
    {:db                          (assoc db :multiaccount/accounts
@@ -80,7 +81,10 @@
     ::enable-local-notifications nil}
    (wallet/initialize-tokens custom-tokens)
    (wallet/initialize-favourites favourites)
-   (wallet/update-balances nil new-account?)
+   (if (or (not new-account?)
+           scan-all-tokens?)
+     (wallet/update-balances nil scan-all-tokens?)
+     (wallet/set-zero-balances (first accounts)))
    (prices/update-prices)))
 
 (fx/defn login
@@ -301,7 +305,7 @@
               {:db                   (-> db
                                          (dissoc :multiaccounts/login)
                                          (assoc-in [:multiaccount :multiaccounts/first-account] first-account?))
-               :dispatch-later       [{:ms 2000 :dispatch [::initialize-wallet accounts nil nil (:recovered multiaccount)]}]}
+               :dispatch-later       [{:ms 2000 :dispatch [::initialize-wallet accounts nil nil (:recovered multiaccount) true]}]}
               (finish-keycard-setup)
               (transport/start-messenger)
               (communities/fetch)
@@ -314,16 +318,18 @@
 
 (fx/defn multiaccount-login-success
   [{:keys [db now] :as cofx}]
-  (let [{:keys [key-uid password save-password? creating?]} (:multiaccounts/login db)
-        multiaccounts                                       (:multiaccounts/multiaccounts db)
-        recovering?                                         (get-in db [:intro-wizard :recovering?])
-        login-only?                                         (not (or creating?
-                                                                     recovering?
-                                                                     (keycard-setup? cofx)))
-        nodes                                               nil]
+  (let [{:keys [key-uid password save-password? creating?]}
+        (:multiaccounts/login db)
+
+        multiaccounts      (:multiaccounts/multiaccounts db)
+        recovered-account? (get db :recovered-account?)
+        login-only?        (not (or creating?
+                                    recovered-account?
+                                    (keycard-setup? cofx)))
+        nodes              nil]
     (log/debug "[multiaccount] multiaccount-login-success"
                "login-only?" login-only?
-               "recovering?" recovering?)
+               "recovered-account?" recovered-account?)
     (fx/merge cofx
               {:db (-> db
                        (dissoc :connectivity/ui-status-properties)
@@ -340,13 +346,13 @@
               ;;FIXME
               (when nodes
                 (fleet/set-nodes :eth.contract nodes))
-              (wallet/restart-wallet-service {:force-start? true})
+              (if (and (not login-only?)
+                       (not recovered-account?))
+                (wallet/set-initial-blocks-range)
+                (wallet/restart-wallet-service {:force-start? true}))
               (if login-only?
                 (login-only-events key-uid password save-password?)
-                (create-only-events))
-              (when recovering?
-                (navigation/navigate-to-cofx :tabs {:screen :chat-stack
-                                                    :params {:screen :home}})))))
+                (create-only-events)))))
 
 ;; FIXME(Ferossgp): We should not copy keys as we denormalize the database,
 ;; this create desync between actual accounts and the one on login causing broken state
