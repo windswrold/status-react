@@ -6,7 +6,6 @@
                 [re-frame "0.12.0"]
                 [binaryage/oops "0.7.0"]
                 [com.andrewmcveigh/cljs-time "0.5.2"]
-                [status-im/timbre "4.10.0-2-status"]
                 [com.taoensso/encore "2.105.0"]
                 [hickory "0.7.1"]
                 [cljs-bean "1.3.0"]
@@ -32,16 +31,11 @@
  :http {:port 3449
         :host "0.0.0.0"}
 
- :cache-blockers #{status-im.utils.js-resources status-im.ui.components.icons.icons}
-
  :builds {:mobile
           {:target :react-native
            :output-dir "app"
            :init-fn status-im.core/init
-           :dev {:devtools {:after-load status-im.reloader/reload
-                            :build-notify status-im.reloader/build-notify
-                            :preloads [re-frisk-remote.preload]}
-                 :closure-defines {status-im.utils.config/INFURA_TOKEN #shadow/env "INFURA_TOKEN"}
+           :dev {:devtools {:preloads [re-frisk-remote.preload]}
                  :compiler-options {:output-feature-set :es5
                                     :closure-defines
                                     {re-frame.trace/trace-enabled? true}
@@ -51,10 +45,7 @@
                  ;; in the SHADOW_HOST env variable to make sure that
                  ;; it will use the right interface
                  :local-ip #shadow/env "SHADOW_HOST"}
-           :chunks {:fleets status-im.default-fleet/default-fleets
-                    :chats status-im.chat.default-chats/default-chats}
-           :release {:closure-defines {status-im.utils.config/INFURA_TOKEN #shadow/env "INFURA_TOKEN"}
-                     :compiler-options {:output-feature-set :es6
+           :release {:compiler-options {:output-feature-set :es6
                                         ;;disable for android build as there
                                         ;;is an intermittent warning with deftype
                                         :warnings-as-errors false
@@ -72,7 +63,6 @@
            :output-dir    "target/test"
            :optimizations :simple
            :target        :node-test
-           :closure-defines {status-im.utils.config/INFURA_TOKEN #shadow/env "INFURA_TOKEN"}
            :compiler-options {;; needed because we override require and it
                               ;; messes with source-map which reports callstack
                               ;; exceeded exceptions instead of real issues
