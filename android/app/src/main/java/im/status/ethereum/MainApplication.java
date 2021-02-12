@@ -3,11 +3,9 @@ package im.status.ethereum;
 import androidx.multidex.MultiDexApplication;
 import android.util.Log;
 import android.content.Context;
-import android.webkit.WebView;
 import java.lang.reflect.InvocationTargetException;
 import com.facebook.react.PackageList;
 
-import com.aakashns.reactnativedialogs.ReactNativeDialogsPackage;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -16,9 +14,6 @@ import com.facebook.react.ReactInstanceManager;
 
 import java.util.List;
 
-import im.status.ethereum.keycard.RNStatusKeycardPackage;
-import im.status.ethereum.module.StatusPackage;
-import im.status.ethereum.pushnotifications.PushNotificationPackage;
 
 public class MainApplication extends MultiDexApplication implements ReactApplication {
 
@@ -30,13 +25,7 @@ public class MainApplication extends MultiDexApplication implements ReactApplica
 
         @Override
         protected List<ReactPackage> getPackages() {
-            StatusPackage statusPackage = new StatusPackage(RootUtil.isDeviceRooted());
-
             List<ReactPackage> packages = new PackageList(this).getPackages();
-            packages.add(statusPackage);
-            packages.add(new ReactNativeDialogsPackage());
-            packages.add(new RNStatusKeycardPackage());
-            packages.add(new PushNotificationPackage());
             return packages;
         }
 
@@ -55,7 +44,6 @@ public class MainApplication extends MultiDexApplication implements ReactApplica
     public void onCreate() {
         super.onCreate();
         SoLoader.init(this, /* native exopackage */ false);
-        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG_WEBVIEW == "1");
         initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
     }
     /**

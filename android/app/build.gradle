@@ -1,6 +1,5 @@
 apply plugin: "com.android.application"
 
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 
 import com.android.build.OutputFile
 import com.sun.org.apache.xalan.internal.xsltc.compiler.Copy
@@ -126,7 +125,6 @@ def enableHermes = project.ext.react.get("enableHermes", false);
 /**
  * Exclude google library so we can publish to external android stores
  */
-def googleFree = project.env.get("GOOGLE_FREE", false)
 
 def getVersionCode = { ->
     new ByteArrayOutputStream().withStream { stdOut ->
@@ -272,8 +270,6 @@ android {
             versionNameSuffix   ".pr"
             debuggable          false
             matchingFallbacks = ["release"]
-            // necessary to make react-native-config's code generation work
-            resValue "string", "build_config_package", "im.status.ethereum"
         }
     }
     // applicationVariants are e.g. debug, release
@@ -332,16 +328,14 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-alpha02'
 
     implementation 'androidx.multidex:multidex:2.0.1' // only needed if minSdkVersion is less than 21 (https://developer.android.com/studio/build/multidex)
-    implementation project(':react-native-dialogs')
     // Force using exact RN version instead of relying on gradle dependency resolution
     // https://docs.gradle.org/current/userguide/introduction_dependency_management.html#sec:dependency_resolution
     // NOTE: Uncomment if building RN from a fork
     //compile ("com.facebook.react:react-native:0.55.4") { force = true }  // From node_modules
     implementation project(':react-native-status')
-    implementation project(':react-native-status-keycard')
-    implementation 'com.github.status-im:function:0.0.1'
-    implementation 'com.facebook.fresco:fresco:2.0.0'
-    implementation 'com.facebook.fresco:animated-gif:2.0.0'
+    //implementation 'com.github.status-im:function:0.0.1'
+    //implementation 'com.facebook.fresco:fresco:2.0.0'
+    //implementation 'com.facebook.fresco:animated-gif:2.0.0'
 }
 
 def getLocalNDKDir = { ->

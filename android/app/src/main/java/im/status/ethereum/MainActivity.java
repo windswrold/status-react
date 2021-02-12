@@ -23,15 +23,12 @@ import android.provider.Settings;
 import android.os.Bundle;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
-import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView;
 
 import com.facebook.react.ReactFragmentActivity;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.modules.core.PermissionListener;
-import org.devio.rn.splashscreen.SplashScreen;
 
 import java.util.Properties;
-import im.status.ethereum.module.StatusThreadPoolExecutor;
 
 public class MainActivity extends ReactFragmentActivity
         implements ActivityCompat.OnRequestPermissionsResultCallback{
@@ -106,74 +103,6 @@ public class MainActivity extends ReactFragmentActivity
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
-        switch (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) {
-            case Configuration.UI_MODE_NIGHT_YES:
-                setTheme(R.style.DarkTheme);
-
-                break;
-            case Configuration.UI_MODE_NIGHT_NO:
-                setTheme(R.style.LightTheme);
-                break;
-            default:
-                setTheme(R.style.LightTheme);
-        }
-        // Make sure we get an Alert for every uncaught exceptions
-        registerUncaughtExceptionHandler(MainActivity.this);
-
-        // Report memory details for this application
-        final ActivityManager activityManager = getActivityManager();
-        Log.v("RNBootstrap", "Available system memory "+getAvailableMemory(activityManager).availMem + ", maximum usable application memory " + activityManager.getLargeMemoryClass()+"M");
-
-        setSecureFlag();
-        SplashScreen.show(this, true);
-        // NOTE: Try to not restore the state https://github.com/software-mansion/react-native-screens/issues/17
-        super.onCreate(null);
-
-        if (!shouldShowRootedNotification()) {
-            configureStatus();
-        } else {
-            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                    .setMessage(getResources().getString(R.string.root_warning))
-                    .setPositiveButton(getResources().getString(R.string.root_okay), new OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            rejectRootedNotification();
-                            dialog.dismiss();
-                            configureStatus();
-                        }
-                    })
-                    .setNegativeButton(getResources().getString(R.string.root_cancel), new OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            MainActivity.this.finishAffinity();
-                        }
-                    })
-                    .setOnCancelListener(new OnCancelListener() {
-                        @Override
-                        public void onCancel(DialogInterface dialog) {
-                            dialog.dismiss();
-                            MainActivity.this.finishAffinity();
-                        }
-                    })
-                    .create();
-
-            dialog.show();
-        }
-
-        Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                System.loadLibrary("status-logs");
-            }
-        };
-
-        StatusThreadPoolExecutor.getInstance().execute(r);
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
     }
@@ -199,7 +128,7 @@ public class MainActivity extends ReactFragmentActivity
     private static final Integer FREQUENCY_OF_REMINDER_IN_PERCENT = 5;
 
     private boolean shouldShowRootedNotification() {
-        if (RootUtil.isDeviceRooted() && BuildConfig.ENABLE_ROOT_ALERT == "1") {
+        if (RootUtil.isDeviceRooted()) {
             if (userRejectedRootedNotification()) {
                 return ((Math.random() * 100) < FREQUENCY_OF_REMINDER_IN_PERCENT);
             } else return true;
@@ -242,14 +171,5 @@ public class MainActivity extends ReactFragmentActivity
             mPermissionListener = null;
         }
     }
-
-    @Override
-    protected ReactActivityDelegate createReactActivityDelegate() {
-        return new ReactActivityDelegate(this, getMainComponentName()) {
-            @Override
-            protected ReactRootView createRootView() {
-                return new RNGestureHandlerEnabledRootView(MainActivity.this);
-            }
-        };
-    }
 }
+

@@ -12,9 +12,7 @@
 (defn root [_]
   (reagent/create-class
    {:display-name "root"
-    :reagent-render (fn []
-                      [react/view
-                       [react/text "test"]])}))
+    :reagent-render (fn [])}))
 
 (defn init []
   (re-frame/dispatch-sync [:init/app-started])
