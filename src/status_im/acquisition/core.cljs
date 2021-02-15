@@ -12,8 +12,7 @@
             [status-im.acquisition.advertiser :as advertiser]
             [status-im.acquisition.persistance :as persistence]
             [status-im.acquisition.gateway :as gateway]
-            [status-im.utils.config :as config]
-            [status-im.acquisition.install-referrer :as install-referrer]))
+            [status-im.utils.config :as config]))
 
 (def not-found-code "notfound.click_id")
 (def advertiser-type "advertiser")
@@ -33,13 +32,7 @@
  ::get-referrer
  (fn []
    (persistence/get-referrer-flow-state
-    (fn [^js data]
-      (install-referrer/get-referrer
-       (fn [install-referrer]
-         (persistence/set-referrer install-referrer)
-         (when (not= install-referrer "unknown")
-           (when-let [referrer (install-referrer/parse-referrer install-referrer)]
-             (re-frame/dispatch [::has-referrer data referrer])))))))))
+    (fn [^js data]))))
 
 (re-frame/reg-fx
  ::check-referrer
@@ -47,12 +40,7 @@
    (persistence/get-referrer-flow-state
     (fn [^js data]
       (if external-referrer
-        (re-frame/dispatch [::has-referrer data external-referrer])
-        (persistence/get-referrer
-         (fn [install-referrer]
-           (when (not= install-referrer "unknown")
-             (when-let [referrer (install-referrer/parse-referrer install-referrer)]
-               (re-frame/dispatch [::has-referrer data referrer]))))))))))
+        (re-frame/dispatch [::has-referrer data external-referrer]))))))
 
 (fx/defn referrer-registered
   {:events [::referrer-registered]}
