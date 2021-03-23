@@ -7,7 +7,8 @@
             [status-im.utils.money :as money]
             [status-im.utils.types :as types]
             [status-im.utils.utils :as utils]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [re-frame.interop :as interop]))
 
 (def json-rpc-api
   {"eth_call" {}
@@ -214,28 +215,30 @@
         (do
           (log/error :json-rpc/method-not-found method)
           (on-error :json-rpc/method-not-found))
-        (status/call-private-rpc
-         (types/clj->json {:jsonrpc "2.0"
-                           :id      id
-                           :method  (if subscription?
-                                      "eth_subscribeSignal"
-                                      method)
-                           :params  (if subscription?
-                                      [method params]
-                                      params)})
-         (fn [response]
-           (if (string/blank? response)
-             (on-error {:message "Blank response"})
-             (let [response-js (types/json->js response)]
-               (if (.-error response-js)
-                 (on-error (types/js->clj (.-error response-js)))
-                 (if subscription?
-                   (re-frame/dispatch
-                    [:ethereum.callback/subscription-success
-                     (types/js->clj (.-result response-js)) on-success])
-                   (on-success (on-result (if js-response
-                                            (.-result response-js)
-                                            (types/js->clj (.-result response-js)))))))))))))
+        (let [n (interop/now)]
+          (status/call-private-rpc
+           (types/clj->json {:jsonrpc "2.0"
+                             :id      id
+                             :method  (if subscription?
+                                        "eth_subscribeSignal"
+                                        method)
+                             :params  (if subscription?
+                                        [method params]
+                                        params)})
+           (fn [response]
+             (log/info "call" method ": " (- (interop/now) n) "ms")
+             (if (string/blank? response)
+               (on-error {:message "Blank response"})
+               (let [response-js (types/json->js response)]
+                 (if (.-error response-js)
+                   (on-error (types/js->clj (.-error response-js)))
+                   (if subscription?
+                     (re-frame/dispatch
+                      [:ethereum.callback/subscription-success
+                       (types/js->clj (.-result response-js)) on-success])
+                     (on-success (on-result (if js-response
+                                              (.-result response-js)
+                                              (types/js->clj (.-result response-js))))))))))))))
     (log/warn "method" method "not found" arg)))
 
 (defn eth-call

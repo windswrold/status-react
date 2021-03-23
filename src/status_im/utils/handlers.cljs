@@ -2,7 +2,8 @@
   (:require [re-frame.core :as re-frame]
             [re-frame.interceptor :refer [->interceptor get-coeffect]]
             [taoensso.timbre :as log]
-            [status-im.utils.debounce :as debounce]))
+            [status-im.utils.debounce :as debounce]
+            [re-frame.interop :as interop]))
 
 (defn- parse-json
   ;; NOTE(dmitryn) Expects JSON response like:
@@ -36,14 +37,21 @@
   (let [[first _] (get-coeffect ctx :event)]
     first))
 
+(def n (atom nil))
+
 (def debug-handlers-names
   "Interceptor which logs debug information to js/console for each event."
   (->interceptor
    :id     :debug-handlers-names
    :before (fn debug-handlers-names-before
              [context]
-             (log/debug "Handling re-frame event: " (pretty-print-event context))
-             context)))
+             (reset! n (interop/now))
+             ;(log/debug "Handling re-frame event: " (pretty-print-event context))
+             context)
+   :after (fn
+            [context]
+            (log/info "Handling re-frame event: " (pretty-print-event context) ": " (- (interop/now) @n) "ms")
+            context)))
 
 (defn register-handler-fx
   ([name handler]
