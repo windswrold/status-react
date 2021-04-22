@@ -65,14 +65,17 @@
 (fx/defn upsert-group-chat-topics
   "Update topics for each member of the group chat"
   [{:keys [db] :as cofx}]
-  (let [group-chats (filter (fn [{:keys [chat-type]}]
-                              (= chat-type constants/private-group-chat-type))
+  (let [my-public-key (multiaccounts.model/current-public-key cofx)
+        group-chats (filter (fn [{:keys [chat-type members-joined]}]
+                              (and (= chat-type constants/private-group-chat-type)
+                                   (contains? members-joined my-public-key)))
                             (vals (:chats db)))]
-    (apply fx/merge
-           cofx
-           (map
-            #(mailserver.topics/upsert-group-chat (:chat-id %) (:members-joined %))
-            group-chats))))
+    (when (seq group-chats)
+      (apply fx/merge
+             cofx
+             (map
+              #(mailserver.topics/upsert-group-chat (:chat-id %) (:members-joined %))
+              group-chats)))))
 
 ;; Filter db
 

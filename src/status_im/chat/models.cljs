@@ -298,10 +298,28 @@
 (defn my-profile-chat-topic [db]
   (profile-chat-topic (get-in db [:multiaccount :public-key])))
 
+(fx/defn handle-public-chat-created
+  {:events [::public-chat-created]}
+  [{:keys [db] :as cofx} chat-id {:keys [navigation-reset? dont-navigate?]} response]
+  (let [chat (chats-store/<-rpc (first (:chats response)))]
+    (fx/merge
+     cofx
+     {:db (assoc-in db [:chats chat-id] chat)}
+     #(when navigation-reset?
+        (navigation/navigate-to-cofx % :home {}))
+     #(when-not dont-navigate?
+        {:dispatch [:chat.ui/navigate-to-chat chat-id]}))))
+
+(fx/defn create-public-chat-go [cofx chat-id on-success]
+  {::json-rpc/call [{:method "wakuext_createPublicChat"
+                     :params [{:ID chat-id}]
+                     :on-success #(re-frame/dispatch [::public-chat-created chat-id on-success %])
+                     :on-error #(log/error "failed to create public chat" chat-id %)}]})
+
 (fx/defn start-public-chat
   "Starts a new public chat"
   {:events [:chat.ui/start-public-chat]}
-  [cofx topic {:keys [dont-navigate? profile-public-key navigation-reset?]}]
+  [cofx topic {:keys [dont-navigate? profile-public-key navigation-reset?] :as opts}]
   (if (or (new-public-chat.db/valid-topic? topic) profile-public-key)
     (if (active-chat? cofx topic)
       (when-not dont-navigate?
@@ -310,13 +328,10 @@
                     {:dispatch [:chat.ui/navigate-to-chat topic]}
                     (navigation/navigate-to-cofx :home {}))
           (navigate-to-chat cofx topic)))
-      (fx/merge cofx
-                (add-public-chat topic profile-public-key false)
-                (transport.filters/load-chat topic)
-                #(when navigation-reset?
-                   (navigation/navigate-to-cofx % :home {}))
-                #(when-not dont-navigate?
-                   {:dispatch [:chat.ui/navigate-to-chat topic]})))
+      (create-public-chat-go
+       cofx
+       topic
+       opts))
     {:utils/show-popup {:title   (i18n/label :t/cant-open-public-chat)
                         :content (i18n/label :t/invalid-public-chat-topic)}}))
 

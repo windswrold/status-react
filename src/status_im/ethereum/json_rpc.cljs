@@ -36,6 +36,8 @@
    "waku_getSymKey" {}
    "waku_markTrustedPeer" {}
    "wakuext_post" {}
+   "wakuext_requestAllHistoricMessages" {}
+   "wakuext_createPublicChat" {}
    "wakuext_startMessenger" {}
    "wakuext_sendPairInstallation" {}
    "wakuext_syncDevices" {}

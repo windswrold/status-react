@@ -494,30 +494,27 @@
     (vals planned-gap-requests))
    topics))
 
+(fx/defn handle-successful-request
+  {:events [::request-success]}
+  [{:keys [db]}]
+  {:db (dissoc db :mailserver/current-request)})
+
 (fx/defn process-next-messages-request
   [{:keys [db now] :as cofx}]
-  (when (and
-         (:messenger/started? db)
-         (mobile-network-utils/syncing-allowed? cofx)
-         (fetch-use-mailservers? cofx)
-         (not (:mailserver/current-request db)))
-    (when-let [mailserver (get-mailserver-when-ready cofx)]
-      (let [request-to (or (:mailserver/request-to db)
-                           (quot now 1000))
-            requests   (prepare-messages-requests cofx request-to)]
-        (log/debug "Mailserver: planned requests " requests)
-        (if-let [request (first requests)]
-          {:db                          (assoc db
-                                               :mailserver/pending-requests (count requests)
-                                               :mailserver/current-request request
-                                               :mailserver/request-to request-to)
-           :mailserver/request-messages {:mailserver mailserver
-                                         :request    request}}
-          {:db (dissoc db
-                       :mailserver/pending-requests
-                       :mailserver/request-to
-                       :mailserver/requests-from
-                       :mailserver/requests-to)})))))
+  (when false
+    (when (and
+           (:messenger/started? db)
+           (mobile-network-utils/syncing-allowed? cofx)
+           (fetch-use-mailservers? cofx)
+           (not (:mailserver/current-request db)))
+      (when-let [mailserver (get-mailserver-when-ready cofx)]
+        {:db (assoc db :mailserver/current-request true)
+         ::json-rpc/call [{:method "wakuext_requestAllHistoricMessages"
+                           :params []
+                           :on-success #(do
+                                          (log/info "fetched historical messages")
+                                          (re-frame/dispatch [::request-success]))
+                           :on-failure #(log/error "failed retrieve historical messages" %)}]}))))
 
 (fx/defn add-mailserver-trusted
   "the current mailserver has been trusted

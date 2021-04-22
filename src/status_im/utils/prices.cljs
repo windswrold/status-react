@@ -39,7 +39,7 @@
                                      :last-day (:OPEN24HOUR entry)}}))}))))
 
 (defn get-prices [from to mainnet? on-success on-error]
-  (log/debug "[prices] get-prices"
+  (log/info "[prices] get-prices"
              "from" from
              "to" to
              "mainnet?" mainnet?)
