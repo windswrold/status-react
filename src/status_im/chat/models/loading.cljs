@@ -115,8 +115,7 @@
         (when (or first-request cursor)
           (merge
            {:db (assoc-in db [:pagination-info chat-id :loading-messages?] true)}
-           {:utils/dispatch-later [{:ms 100 :dispatch [:load-more-reactions cursor chat-id]}
-                                   {:ms 100 :dispatch [:load-gaps chat-id]}]}
+           {:utils/dispatch-later [{:ms 100 :dispatch [:load-more-reactions cursor chat-id]}]}
            (data-store.messages/messages-by-chat-id-rpc
             chat-id
             cursor

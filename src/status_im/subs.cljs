@@ -764,6 +764,13 @@
    (get chats chat-id)))
 
 (re-frame/reg-sub
+ :chats/synced-to
+ (fn [[_ chat-id] _]
+   [(re-frame/subscribe [:chat-by-id chat-id])])
+ (fn [{:keys [synced-to]}]
+   synced-to))
+
+(re-frame/reg-sub
  :chats/current-raw-chat
  :<- [::chats]
  :<- [:chats/current-chat-id]
@@ -826,7 +833,7 @@
  :chats/current-chat-chat-view
  :<- [:chats/current-chat]
  (fn [current-chat]
-   (select-keys current-chat [:chat-id :show-input? :group-chat :admins :invitation-admin :public? :chat-type :color :chat-name])))
+   (select-keys current-chat [:chat-id :show-input? :group-chat :admins :invitation-admin :public? :chat-type :color :chat-name :synced-to])))
 
 (re-frame/reg-sub
  :current-chat/metadata
@@ -916,12 +923,6 @@
    (get-in chats [chat-id :public?])))
 
 (re-frame/reg-sub
- :chats/might-have-join-time-messages?
- :<- [::chats]
- (fn [chats [_ chat-id]]
-   (get-in chats [chat-id :might-have-join-time-messages?])))
-
-(re-frame/reg-sub
  :chats/message-list
  :<- [::message-lists]
  (fn [message-lists [_ chat-id]]
@@ -948,16 +949,13 @@
  (fn [[_ chat-id] _]
    [(re-frame/subscribe [:chats/message-list chat-id])
     (re-frame/subscribe [:chats/chat-messages chat-id])
-    (re-frame/subscribe [:chats/messages-gaps chat-id])
-    (re-frame/subscribe [:chats/range chat-id])
-    (re-frame/subscribe [:chats/all-loaded? chat-id])
-    (re-frame/subscribe [:chats/public? chat-id])])
- (fn [[message-list messages messages-gaps range all-loaded? public?]]
+    (re-frame/subscribe [:chats/synced-to chat-id])])
+ (fn [[message-list messages synced-to]]
    ;;TODO (perf)
    (-> (models.message-list/->seq message-list)
        (chat.db/add-datemarks)
        (hydrate-messages messages)
-       (chat.db/add-gaps messages-gaps range all-loaded? public?))))
+       (chat.db/collapse-gaps synced-to))))
 
 ;;we want to keep data unchanged so react doesn't change component when we leave screen
 (def memo-chat-messages-stream (atom nil))
@@ -2133,8 +2131,8 @@
 (re-frame/reg-sub
  :chats/fetching-gap-in-progress?
  :<- [:mailserver/fetching-gaps-in-progress]
- (fn [gaps [_ ids chat-id]]
-   (seq (select-keys (get gaps chat-id) ids))))
+ (fn [gaps [_ ids _]]
+   (seq (select-keys gaps ids))))
 
 (re-frame/reg-sub
  :mailserver/fetching?

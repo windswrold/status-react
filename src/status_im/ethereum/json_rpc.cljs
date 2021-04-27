@@ -37,6 +37,8 @@
    "waku_markTrustedPeer" {}
    "wakuext_post" {}
    "wakuext_requestAllHistoricMessages" {}
+   "wakuext_fillGaps" {}
+   "wakuext_syncChatFromSyncedFrom" {}
    "wakuext_createPublicChat" {}
    "wakuext_startMessenger" {}
    "wakuext_sendPairInstallation" {}

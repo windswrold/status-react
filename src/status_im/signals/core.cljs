@@ -4,7 +4,6 @@
             [status-im.mailserver.core :as mailserver]
             [status-im.multiaccounts.login.core :as login]
             [status-im.multiaccounts.model :as multiaccounts.model]
-            [status-im.transport.filters.core :as transport.filters]
             [status-im.transport.message.core :as transport.message]
             [status-im.notifications.local :as local-notifications]
             [status-im.chat.models.message :as models.message]
@@ -66,7 +65,6 @@
       "discovery.summary"  (summary cofx (js->clj event-js :keywordize-keys true))
       "subscriptions.data" (ethereum.subscriptions/handle-signal cofx (js->clj event-js :keywordize-keys true))
       "subscriptions.error" (ethereum.subscriptions/handle-error cofx (js->clj event-js :keywordize-keys true))
-      "whisper.filter.added" (transport.filters/handle-negotiated-filter cofx (js->clj event-js :keywordize-keys true))
       "messages.new" (transport.message/sanitize-messages-and-process-response cofx event-js true)
       "wallet" (ethereum.subscriptions/new-wallet-event cofx (js->clj event-js :keywordize-keys true))
       "local-notifications" (local-notifications/process cofx (js->clj event-js :keywordize-keys true))

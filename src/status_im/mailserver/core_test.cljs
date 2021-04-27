@@ -395,7 +395,6 @@
    {:multiaccount {:public-key "me"}
     :chats
     {"chat-id-1" {:is-active                      true
-                  :might-have-join-time-messages? true
                   :group-chat                     true
                   :public?                        true
                   :chat-id                        "chat-id-1"}
@@ -410,7 +409,6 @@
     :chats
     {"chat-id-1" {:is-active                      true
                   :join-time-mail-request-id      "a"
-                  :might-have-join-time-messages? true
                   :group-chat                     true
                   :public?                        true
                   :chat-id                        "chat-id-1"}
@@ -425,13 +423,11 @@
     :chats
     {"chat-id-1" {:is-active                      true
                   :join-time-mail-request-id      "a"
-                  :might-have-join-time-messages? true
                   :group-chat                     true
                   :public?                        true
                   :chat-id                        "chat-id-1"}
      "chat-id-2" {:is-active                      true
                   :join-time-mail-request-id      "a"
-                  :might-have-join-time-messages? true
                   :group-chat                     true
                   :public?                        true
                   :chat-id                        "chat-id-2"}
@@ -441,7 +437,6 @@
                   :chat-id    "chat-id-3"}
      "chat-id-4" {:is-active                      true
                   :join-time-mail-request-id      "a"
-                  :might-have-join-time-messages? true
                   :group-chat                     true
                   :public?                        true
                   :chat-id                        "chat-id-4"}}}})

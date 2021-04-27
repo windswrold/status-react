@@ -2,7 +2,7 @@
   (:require [re-frame.core :as re-frame]
             [taoensso.timbre :as log]
             [status-im.multiaccounts.model :as multiaccounts.model]
-            [status-im.transport.filters.core :as transport.filters]
+            [status-im.chat.models.message-list :as message-list]
             [status-im.data-store.chats :as chats-store]
             [status-im.data-store.messages :as messages-store]
             [status-im.ethereum.json-rpc :as json-rpc]
@@ -83,33 +83,6 @@
   [{:keys [current-chat-id] :as db} kvs]
   (update-in db [:chat-ui-props current-chat-id] merge kvs))
 
-(defn dissoc-join-time-fields [db chat-id]
-  (update-in db [:chats chat-id] dissoc
-             :join-time-mail-request-id
-             :might-have-join-time-messages?))
-
-(fx/defn join-time-messages-checked
-  "The key :might-have-join-time-messages? in public chats signals that
-  the public chat is freshly (re)created and requests for messages to the
-  mailserver for the topic has not completed yet. Likewise, the key
-  :join-time-mail-request-id is associated a little bit after, to signal that
-  the request to mailserver was a success. When request is signalled complete
-  by mailserver, corresponding event :chat.ui/join-time-messages-checked
-  dissociates these two fileds via this function, thereby signalling that the
-  public chat is not fresh anymore."
-  {:events [:chat.ui/join-time-messages-checked]}
-  [{:keys [db] :as cofx} chat-id]
-  (when (:might-have-join-time-messages? (get-chat cofx chat-id))
-    {:db (dissoc-join-time-fields db chat-id)}))
-
-(fx/defn join-time-messages-checked-for-chats
-  [{:keys [db]} chat-ids]
-  {:db (reduce #(if (:might-have-join-time-messages? (get-chat {:db %1} %2))
-                  (dissoc-join-time-fields %1 %2)
-                  %1)
-               db
-               chat-ids)})
-
 (defn- create-new-chat
   [chat-id {:keys [db now]}]
   (let [name (get-in db [:contacts/contacts chat-id :name])]
@@ -133,9 +106,7 @@
         new? (not (get-in db [:chats chat-id]))
         public? (public-chat? chat)]
     (fx/merge cofx
-              {:db (update-in db [:chats chat-id] merge chat)}
-              (when (and public? new? (not timeline?))
-                (transport.filters/load-chat chat-id)))))
+              {:db (update-in db [:chats chat-id] merge chat)})))
 
 (defn map-chats [{:keys [db] :as cofx}]
   (fn [val]
@@ -160,8 +131,7 @@
                                        (fn [acc {:keys [chat-id] :as chat}]
                                          (update acc chat-id merge chat))
                                        %
-                                       chats))}
-              (transport.filters/load-chats filtered-chats))))
+                                       chats))})))
 
 (fx/defn upsert-chat
   "Upsert chat when not deleted"
@@ -194,7 +164,6 @@
                                                       constants/public-chat-type)
                 :contacts                       #{}
                 :public?                        true
-                :might-have-join-time-messages? (get-in cofx [:db :multiaccount :use-mailservers?])
                 :unviewed-messages-count        0}
                nil))
 
@@ -250,12 +219,9 @@
   {:events [:chat.ui/remove-chat]}
   [{:keys [db now] :as cofx} chat-id]
   (fx/merge cofx
-            (mailserver/remove-gaps chat-id)
-            (mailserver/remove-range chat-id)
             (deactivate-chat chat-id)
             (offload-messages chat-id)
             (clear-history chat-id true)
-            (transport.filters/stop-listening chat-id)
             (when (not (= (:view-id db) :home))
               (navigation/navigate-to-cofx :home {}))))
 
@@ -263,10 +229,8 @@
   "Takes chat-id and coeffects map, returns effects necessary when navigating to chat"
   {:events [:chat.ui/preload-chat-data]}
   [{:keys [db] :as cofx} chat-id]
-  (fx/merge cofx
-            (when-not (or (group-chat? cofx chat-id) (timeline-chat? cofx chat-id))
-              (transport.filters/load-chat chat-id))
-            (loading/load-messages chat-id)))
+
+  (loading/load-messages cofx chat-id))
 
 (fx/defn navigate-to-chat
   "Takes coeffects map and chat-id, returns effects necessary for navigation and preloading data"
@@ -289,8 +253,7 @@
               {:dispatch [:chat.ui/navigate-to-chat chat-id]}
               (upsert-chat {:chat-id   chat-id
                             :is-active true}
-                           nil)
-              (transport.filters/load-chat chat-id))))
+                           nil))))
 
 (defn profile-chat-topic [public-key]
   (str "@" public-key))
@@ -341,9 +304,7 @@
   [cofx profile-public-key]
   (let [topic (profile-chat-topic profile-public-key)]
     (when-not (active-chat? cofx topic)
-      (fx/merge cofx
-                (add-public-chat topic profile-public-key false)
-                (transport.filters/load-chat topic)))))
+      (add-public-chat cofx topic profile-public-key false))))
 
 (fx/defn start-timeline-chat
   "Starts a new timeline chat"
@@ -413,19 +374,30 @@
                             (re-frame/dispatch [:bottom-sheet/hide])
                             (re-frame/dispatch [:chat.ui/clear-history chat-id false]))}})
 
+(fx/defn gaps-failed
+  {:events [::gaps-failed]}
+  [{:keys [db]} chat-id gap-ids error]
+  (log/error "failed to fetch gaps" chat-id gap-ids error)
+  {:db (dissoc db :mailserver/fetching-gaps-in-progress)})
+
+(fx/defn gaps-filled
+  {:events [::gaps-filled]}
+  [{:keys [db] :as cofx} chat-id message-ids]
+  (fx/merge
+   cofx
+   {:db (-> db
+            (update-in [:messages chat-id] (fn [messages] (apply dissoc messages message-ids)))
+            (dissoc :mailserver/fetching-gaps-in-progress))}
+   (message-list/rebuild-message-list chat-id)))
+
 (fx/defn chat-ui-fill-gaps
   {:events [:chat.ui/fill-gaps]}
-  [{:keys [db] :as cofx} gap-ids chat-id]
-  (let [topics  (mailserver.topics/topics-for-chat db chat-id)
-        gaps    (keep
-                 (fn [id]
-                   (get-in db [:mailserver/gaps chat-id id]))
-                 gap-ids)]
-    (mailserver/fill-the-gap
-     cofx
-     {:gaps    gaps
-      :topics  topics
-      :chat-id chat-id})))
+  [{:keys [db] :as cofx} chat-id gap-ids]
+  {:db (assoc db :mailserver/fetching-gaps-in-progress gap-ids)
+   ::json-rpc/call [{:method "wakuext_fillGaps"
+                     :params [chat-id gap-ids]
+                     :on-success #(re-frame/dispatch [::gaps-filled chat-id gap-ids %])
+                     :on-error #(re-frame/dispatch [::gaps-failed chat-id gap-ids %])}]})
 
 (fx/defn chat-ui-fetch-more
   {:events [:chat.ui/fetch-more]}

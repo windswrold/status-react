@@ -123,6 +123,7 @@
 (defn chat-intro-header-container
   [{:keys [group-chat invitation-admin
            chat-type
+           synced-to
            color chat-id chat-name
            public?]}
    no-messages]
@@ -139,7 +140,7 @@
           :chat-name chat-name
           :public? public?
           :color color
-          :loading-messages? @(re-frame/subscribe [:chats/might-have-join-time-messages? chat-id])
+          :loading-messages? (not (pos? synced-to))
           :no-messages? no-messages}]
      (if group-chat
        [chat-intro opts]
@@ -289,6 +290,7 @@
   (let [{:keys [group-chat chat-id public?]} chat
         messages @(re-frame/subscribe [:chats/chat-messages-stream chat-id])
         current-public-key @(re-frame/subscribe [:multiaccount/public-key])]
+    (println "CHAT" chat)
     ;;do not use anonymous functions for handlers
     [list/flat-list
      (merge

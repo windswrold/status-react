@@ -75,6 +75,8 @@
       type->rpc
       (clojure.set/rename-keys {:chat-id :id
                                 :membership-update-events :membershipUpdateEvents
+                                :synced-from :syncedFrom
+                                :synced-to :syncedTo
                                 :unviewed-messages-count :unviewedMessagesCount
                                 :last-message :lastMessage
                                 :community-id :communityId
@@ -83,7 +85,7 @@
                                 :last-clock-value :lastClockValue
                                 :profile-public-key :profile})
       (dissoc :public? :group-chat :messages
-              :might-have-join-time-messages? :chat-type
+              :chat-type
               :contacts :admins :members-joined)))
 
 (defn <-rpc [chat]
@@ -92,6 +94,8 @@
       unmarshal-members
       (clojure.set/rename-keys {:id :chat-id
                                 :communityId :community-id
+                                :syncedFrom :synced-from
+                                :syncedTo :synced-to
                                 :membershipUpdateEvents :membership-update-events
                                 :deletedAtClockValue :deleted-at-clock-value
                                 :chatType :chat-type

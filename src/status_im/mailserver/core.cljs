@@ -3,7 +3,6 @@
   (:require [clojure.string :as string]
             [clojure.set :as clojure.set]
             [re-frame.core :as re-frame]
-            [status-im.data-store.mailservers :as data-store.mailservers]
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.i18n.i18n :as i18n]
             [status-im.mailserver.constants :as constants]
@@ -357,9 +356,6 @@
                "adjusted-from:" adjusted-from)
     adjusted-from))
 
-(defn chats->never-synced-public-chats [chats]
-  (into {} (filter (fn [[_ v]] (:might-have-join-time-messages? v)) chats)))
-
 (defn- assoc-topic-chat [chat chats topic]
   (assoc chats topic chat))
 
@@ -372,27 +368,8 @@
   {:events [:mailserver.callback/request-success]}
   [{{:keys [chats] :as db} :db} {:keys [request-id topics]}]
   (when (:mailserver/current-request db)
-    (let [by-topic-never-synced-chats
-          (reduce-kv
-           (partial reduce-assoc-topic-chat db)
-           {}
-           (chats->never-synced-public-chats chats))
-          never-synced-chats-in-this-request
-          (select-keys by-topic-never-synced-chats (vec topics))]
-      (if (seq never-synced-chats-in-this-request)
-        {:db
-         (-> db
-             ((fn [db]
-                (reduce
-                 (fn [db chat]
-                   (assoc-in db [:chats (:chat-id chat)
-                                 :join-time-mail-request-id] request-id))
-                 db
-                 (vals never-synced-chats-in-this-request))))
-             (assoc-in [:mailserver/current-request :request-id]
-                       request-id))}
-        {:db (assoc-in db [:mailserver/current-request :request-id]
-                       request-id)}))))
+    {:db (assoc-in db [:mailserver/current-request :request-id]
+                   request-id)}))
 
 (defn request-messages!
   [{:keys [sym-key-id address]}
@@ -501,20 +478,19 @@
 
 (fx/defn process-next-messages-request
   [{:keys [db now] :as cofx}]
-  (when false
-    (when (and
-           (:messenger/started? db)
-           (mobile-network-utils/syncing-allowed? cofx)
-           (fetch-use-mailservers? cofx)
-           (not (:mailserver/current-request db)))
-      (when-let [mailserver (get-mailserver-when-ready cofx)]
-        {:db (assoc db :mailserver/current-request true)
-         ::json-rpc/call [{:method "wakuext_requestAllHistoricMessages"
-                           :params []
-                           :on-success #(do
-                                          (log/info "fetched historical messages")
-                                          (re-frame/dispatch [::request-success]))
-                           :on-failure #(log/error "failed retrieve historical messages" %)}]}))))
+  (when (and
+         (:messenger/started? db)
+         (mobile-network-utils/syncing-allowed? cofx)
+         (fetch-use-mailservers? cofx)
+         (not (:mailserver/current-request db)))
+    (when-let [mailserver (get-mailserver-when-ready cofx)]
+      {:db (assoc db :mailserver/current-request true)
+       ::json-rpc/call [{:method "wakuext_requestAllHistoricMessages"
+                         :params []
+                         :on-success #(do
+                                        (log/info "fetched historical messages")
+                                        (re-frame/dispatch [::request-success]))
+                         :on-failure #(log/error "failed retrieve historical messages" %)}]})))
 
 (fx/defn add-mailserver-trusted
   "the current mailserver has been trusted
@@ -621,21 +597,6 @@
 (fx/defn reset-request-to
   [{:keys [db]}]
   {:db (dissoc db :mailserver/request-to)})
-
-(fx/defn remove-gaps
-  [{:keys [db] :as cofx} chat-id]
-  (fx/merge cofx
-            {:db (update db :mailserver/gaps dissoc chat-id)}
-            (data-store.mailservers/delete-gaps-by-chat-id chat-id)))
-
-(fx/defn remove-range
-  [{:keys [db]} chat-id]
-  {:db (update db :mailserver/ranges dissoc chat-id)
-   ::json-rpc/call
-   [{:method "mailservers_deleteChatRequestRange"
-     :params [chat-id]
-     :on-success #(log/debug "deleted chat request range successfully")
-     :on-failure #(log/error "failed to delete chat request range" %)}]})
 
 (defn update-mailserver-topic
   [{:keys [last-request] :as config}
@@ -792,49 +753,6 @@
                    gaps)])))
    chat-ids))
 
-(fx/defn update-gaps
-  [{:keys [db] :as cofx}]
-  (let [{:keys [topics] :as request} (get db :mailserver/current-request)
-        chat-ids          (into #{}
-                                (comp
-                                 (keep #(get-in db [:mailserver/topics %]))
-                                 (mapcat :chat-ids)
-                                 (map str))
-                                topics)
-
-        {:keys [updated-gaps new-gaps deleted-gaps]}
-        (check-all-gaps (get db :mailserver/gaps) chat-ids request)
-
-        ranges            (:mailserver/ranges db)
-        prepared-new-gaps (prepare-new-gaps new-gaps ranges request chat-ids)]
-    (fx/merge
-     cofx
-     {:db
-      (reduce (fn [db chat-id]
-                (let [chats-deleted-gaps (get deleted-gaps chat-id)
-                      chats-updated-gaps (merge (get updated-gaps chat-id)
-                                                (get prepared-new-gaps chat-id))]
-                  (update-in db [:mailserver/gaps chat-id]
-                             (fn [chat-gaps]
-                               (-> (apply dissoc chat-gaps chats-deleted-gaps)
-                                   (merge chats-updated-gaps))))))
-              db
-              chat-ids)}
-     (data-store.mailservers/delete-gaps (mapcat val deleted-gaps))
-     (data-store.mailservers/save-gaps
-      (concat (mapcat vals (vals updated-gaps))
-              (mapcat vals (vals prepared-new-gaps)))))))
-
-(fx/defn update-chats-and-gaps
-  [cofx cursor]
-  (when (or (nil? cursor)
-            (and (string? cursor)
-                 (clojure.string/blank? cursor)))
-    (fx/merge
-     cofx
-     (update-gaps)
-     (update-ranges))))
-
 (defn get-updated-mailserver-topics [db requested-topics from to]
   (into
    {}
@@ -915,42 +833,7 @@
    {:keys [requestID lastEnvelopeHash cursor errorMessage]}]
   (when (multiaccounts.model/logged-in? cofx)
     (if (empty? errorMessage)
-      (let [never-synced-chats-in-request
-            (->> (chats->never-synced-public-chats chats)
-                 (filter (fn [[k v]] (= requestID (:join-time-mail-request-id v))))
-                 keys)]
-        (if (seq never-synced-chats-in-request)
-          (if (= lastEnvelopeHash
-                 "0x0000000000000000000000000000000000000000000000000000000000000000")
-            (fx/merge
-             cofx
-             {:mailserver/increase-limit []
-              :dispatch-n
-              (map
-               #(identity [:chat.ui/join-time-messages-checked %])
-               never-synced-chats-in-request)}
-             (update-chats-and-gaps cursor)
-             (update-mailserver-topics {:request-id requestID
-                                        :cursor     cursor}))
-            (fx/merge
-             cofx
-             {:mailserver/increase-limit []
-              :dispatch-later
-              (vec
-               (map
-                #(identity
-                  {:ms       1000
-                   :dispatch [:chat.ui/join-time-messages-checked %]})
-                never-synced-chats-in-request))}
-             (update-chats-and-gaps cursor)
-             (update-mailserver-topics {:request-id requestID
-                                        :cursor     cursor})))
-          (fx/merge
-           cofx
-           {:mailserver/increase-limit []}
-           (update-chats-and-gaps cursor)
-           (update-mailserver-topics {:request-id requestID
-                                      :cursor     cursor}))))
+      {:mailserver/increase-limit []}
       (handle-request-error cofx errorMessage))))
 
 (fx/defn show-request-error-popup
@@ -1252,33 +1135,6 @@
                                           mailserver-id)
                {})
               (dismiss-connection-error false))))
-
-(fx/defn load-gaps-fx
-  {:events [:load-gaps]}
-  [{:keys [db] :as cofx} chat-id]
-  (when-not (get-in db [:gaps-loaded? chat-id])
-    (let [success-fn #(re-frame/dispatch [::gaps-loaded %1 %2])]
-      (data-store.mailservers/load-gaps cofx chat-id success-fn))))
-
-(fx/defn load-gaps
-  {:events [::gaps-loaded]}
-  [{:keys [db now] :as cofx} chat-id gaps]
-  (let [now-s         (quot now 1000)
-        outdated-gaps
-        (into []
-              (comp (filter #(< (:to %)
-                                (- now-s constants/max-gaps-range)))
-                    (map :id))
-              (vals gaps))
-        gaps          (apply dissoc gaps outdated-gaps)]
-    (fx/merge
-     cofx
-     {:db
-      (-> db
-          (assoc-in [:gaps-loaded? chat-id] true)
-          (assoc-in [:mailserver/gaps chat-id] gaps))}
-
-     (data-store.mailservers/delete-gaps outdated-gaps))))
 
 (fx/defn mailserver-ui-add-pressed
   {:events [:mailserver.ui/add-pressed]}

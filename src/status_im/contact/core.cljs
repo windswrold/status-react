@@ -4,7 +4,6 @@
             [status-im.data-store.contacts :as contacts-store]
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.mailserver.core :as mailserver]
-            [status-im.transport.filters.core :as transport.filters]
             [status-im.navigation :as navigation]
             [status-im.utils.fx :as fx]
             [taoensso.timbre :as log]
@@ -57,7 +56,6 @@
   (fx/merge cofx
             {:db            (-> db
                                 (update-in [:contacts/contacts public-key] merge contact))}
-            (transport.filters/load-contact contact)
             (fn [cf]
               (contacts-store/save-contact cf
                                            (get-in cf [:db :contacts/contacts public-key])
@@ -137,8 +135,7 @@
                                   (update-in [:contacts/contacts public-key] merge contact))
                ::json-rpc/call [{:method "wakuext_ensVerified"
                                  :params [public-key ens-name]
-                                 :on-success #(log/debug "ens name verified successuful")}]}
-              (transport.filters/load-contact contact))))
+                                 :on-success #(log/debug "ens name verified successuful")}]})))
 
 (fx/defn update-nickname
   {:events [:contacts/update-nickname]}
