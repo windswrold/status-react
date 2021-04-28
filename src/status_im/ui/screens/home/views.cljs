@@ -27,7 +27,8 @@
             [status-im.ui.components.topbar :as topbar]
             [status-im.ui.components.plus-button :as components.plus-button]
             [status-im.ui.components.tabbar.styles :as tabs.styles]
-            [status-im.ui.screens.chat.sheets :as sheets])
+            [status-im.ui.screens.chat.sheets :as sheets]
+            [status-im.ui.components.animation :as animation])
   (:require-macros [status-im.utils.views :as views]))
 
 (defn welcome-image-wrapper []
@@ -44,17 +45,70 @@
                        :resize-mode :contain
                        :style       {:width image-size :height image-size}}])])))
 
+(defn translate-anim [translate-y-value translate-y-anim-value]
+  (animation/start
+   (animation/timing translate-y-anim-value {:toValue         translate-y-value
+                                             :duration        1000
+                                             :damping                   15
+                                             :mass                      0.7
+                                             :stiffness                 150
+                                             :overshootClamping         false
+                                             :restSpeedThreshold        0.1
+                                             :restDisplacementThreshold 0.1
+                                             :easing (.-ease ^js animation/easing)
+                                             :useNativeDriver true})))
+
+(defn translate-anim-2 [translate-y-value translate-y-anim-value]
+  (animation/start
+   (animation/spring translate-y-anim-value {:toValue         translate-y-value
+                                             :duration        1000
+                                             :velocity 0.1
+                                             :damping                   15
+                                             :mass                      0.7
+                                             :stiffness                 150
+                                            ;;  :restSpeedThreshold        0.1
+                                            ;;  :restDisplacementThreshold 0.1
+                                             :easing (.-ease ^js animation/easing)
+                                             :useNativeDriver true})))
+
 (defn welcome []
-  [react/view {:style styles/welcome-view}
-   [welcome-image-wrapper]
-   [react/i18n-text {:style styles/welcome-text :key :welcome-to-status}]
-   [react/view
-    [react/i18n-text {:style styles/welcome-text-description
-                      :key   :welcome-to-status-description}]]
-   [react/view {:align-items :center :margin-bottom 50}
-    [quo/button {:on-press            #(re-frame/dispatch [::multiaccounts.login/welcome-lets-go])
-                 :accessibility-label :lets-go-button}
-     (i18n/label :t/lets-go)]]])
+  (let [emoji-1-translate-y-anim (animation/create-value 0)
+        emoji-1-translate-x-anim (animation/create-value 0)]
+    [react/view {:style styles/welcome-view}
+     [welcome-image-wrapper]
+     [react/i18n-text {:style styles/welcome-text :key :welcome-to-status}]
+     [react/view
+      [react/i18n-text {:style styles/welcome-text-description
+                        :key   :welcome-to-status-description}]]
+     [react/view {:align-items :center :margin-bottom 50 :background-color :green}
+      [quo/button {:on-press            #(do
+                                           (translate-anim 200 emoji-1-translate-x-anim)
+                                           (translate-anim-2 -50 emoji-1-translate-y-anim))
+                  ;;  :on-press            #(re-frame/dispatch [::multiaccounts.login/welcome-lets-go])
+                   :accessibility-label :lets-go-button}
+       (i18n/label :t/lets-go)]
+      [react/animated-view {:style {:position :absolute
+                                    :top 5
+                                    :left "45%"
+                                    :transform [{:rotate "25deg"}]}}
+       [react/text "🎉"]]
+      [react/animated-view {:style {:position :absolute
+                                    :top 15
+                                    :left "50%"
+                                    :transform [{:rotate "0deg"}]}}
+       [react/text "🎉"]]
+      [react/animated-view {:style {:position :absolute
+                                    :top 23
+                                    :left "-40%"
+                                    :transform [{:rotate "45deg"}]}}
+       [react/text "🎉"]]
+      [react/animated-view {:style {:position :absolute
+                                    :background-color :red
+                                    :top 25
+                                    :left "55%"
+                                    :transform [{:translateY emoji-1-translate-y-anim}
+                                                 {:translateX emoji-1-translate-x-anim}]}}
+       [react/text {:style {:transform [{:rotate "65deg"}]}} "🎉"]]]]))
 
 (defn home-tooltip-view []
   [react/view (styles/chat-tooltip)

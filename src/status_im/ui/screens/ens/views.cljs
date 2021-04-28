@@ -685,5 +685,5 @@
     [react/keyboard-avoiding-view {:style {:flex 1}}
      [topbar/topbar {:title (i18n/label :t/ens-usernames)}]
      (if (or (seq names) registrations)
-       [registered names multiaccount show? registrations]
+       [welcome]
        [welcome])]))
