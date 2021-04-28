@@ -28,9 +28,7 @@
                       new-chats)
         chats (merge old-chats chats)]
     {:db (assoc db :chats chats
-                :chats/loading? false)
-     :dispatch-n [[:chat/start-timeline-chat]
-                  [:start-profile-chat (get-in db [:multiaccount :public-key])]]}))
+                :chats/loading? false)}))
 
 (fx/defn initialize-chats
   "Initialize persisted chats on startup"

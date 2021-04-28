@@ -327,8 +327,6 @@
               (finish-keycard-setup)
               (transport/start-messenger)
               (communities/fetch)
-              (chat.models/start-timeline-chat)
-              (chat.models/start-profile-chat (:public-key multiaccount))
               (multiaccounts/switch-preview-privacy-mode-flag)
               (link-preview/request-link-preview-whitelist)
               (logging/set-log-level (:log-level multiaccount)))))

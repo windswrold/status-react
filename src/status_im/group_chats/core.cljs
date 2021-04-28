@@ -16,8 +16,7 @@
   {:events [:navigate-chat-updated]}
   [cofx chat-id]
   (if (get-in cofx [:db :chats chat-id :is-active])
-    (models.chat/navigate-to-chat cofx chat-id)
-    (navigation/navigate-to-cofx cofx :home {})))
+    (models.chat/navigate-to-chat cofx chat-id)))
 
 (fx/defn handle-chat-update
   {:events [:chat-updated]}

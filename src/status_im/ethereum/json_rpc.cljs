@@ -40,6 +40,7 @@
    "wakuext_fillGaps" {}
    "wakuext_syncChatFromSyncedFrom" {}
    "wakuext_createPublicChat" {}
+   "wakuext_createProfileChat" {}
    "wakuext_startMessenger" {}
    "wakuext_sendPairInstallation" {}
    "wakuext_syncDevices" {}

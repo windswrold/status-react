@@ -105,8 +105,7 @@
               chat-props)
         new? (not (get-in db [:chats chat-id]))
         public? (public-chat? chat)]
-    (fx/merge cofx
-              {:db (update-in db [:chats chat-id] merge chat)})))
+    {:db (update-in db [:chats chat-id] merge chat)}))
 
 (defn map-chats [{:keys [db] :as cofx}]
   (fn [val]
@@ -126,12 +125,11 @@
   [{:keys [db] :as cofx} chats]
   (let [chats (map (map-chats cofx) chats)
         filtered-chats (filter (filter-chats db) chats)]
-    (fx/merge cofx
-              {:db (update db :chats #(reduce
-                                       (fn [acc {:keys [chat-id] :as chat}]
-                                         (update acc chat-id merge chat))
-                                       %
-                                       chats))})))
+    {:db (update db :chats #(reduce
+                             (fn [acc {:keys [chat-id] :as chat}]
+                               (update acc chat-id merge chat))
+                             %
+                             chats))}))
 
 (fx/defn upsert-chat
   "Upsert chat when not deleted"
@@ -229,7 +227,6 @@
   "Takes chat-id and coeffects map, returns effects necessary when navigating to chat"
   {:events [:chat.ui/preload-chat-data]}
   [{:keys [db] :as cofx} chat-id]
-
   (loading/load-messages cofx chat-id))
 
 (fx/defn navigate-to-chat
@@ -241,7 +238,7 @@
             (fn [{:keys [db]}]
               {:db (assoc db :current-chat-id chat-id)})
             (preload-chat-data chat-id)
-            (navigation/navigate-to-cofx :chat-stack {:screen :chat})))
+            (navigation/navigate-to-cofx  :chat-stack {:screen :chat})))
 
 (fx/defn start-chat
   "Start a chat, making sure it exists"
@@ -263,34 +260,28 @@
 
 (fx/defn handle-public-chat-created
   {:events [::public-chat-created]}
-  [{:keys [db] :as cofx} chat-id {:keys [navigation-reset? dont-navigate?]} response]
+  [{:keys [db] :as cofx} chat-id {:keys [dont-navigate?]} response]
   (let [chat (chats-store/<-rpc (first (:chats response)))]
     (fx/merge
      cofx
-     {:db (assoc-in db [:chats chat-id] chat)}
-     #(when navigation-reset?
-        (navigation/navigate-to-cofx % :home {}))
-     #(when-not dont-navigate?
-        {:dispatch [:chat.ui/navigate-to-chat chat-id]}))))
+     {:db (assoc-in db [:chats chat-id] chat)
+      :dispatch (when-not dont-navigate?
+                  [:chat.ui/navigate-to-chat chat-id])})))
 
-(fx/defn create-public-chat-go [cofx chat-id on-success]
+(fx/defn create-public-chat-go [cofx chat-id opts]
   {::json-rpc/call [{:method "wakuext_createPublicChat"
                      :params [{:ID chat-id}]
-                     :on-success #(re-frame/dispatch [::public-chat-created chat-id on-success %])
+                     :on-success #(re-frame/dispatch [::public-chat-created chat-id opts %])
                      :on-error #(log/error "failed to create public chat" chat-id %)}]})
 
 (fx/defn start-public-chat
   "Starts a new public chat"
   {:events [:chat.ui/start-public-chat]}
-  [cofx topic {:keys [dont-navigate? profile-public-key navigation-reset?] :as opts}]
+  [cofx topic {:keys [dont-navigate? profile-public-key] :as opts}]
   (if (or (new-public-chat.db/valid-topic? topic) profile-public-key)
     (if (active-chat? cofx topic)
       (when-not dont-navigate?
-        (if navigation-reset?
-          (fx/merge cofx
-                    {:dispatch [:chat.ui/navigate-to-chat topic]}
-                    (navigation/navigate-to-cofx :home {}))
-          (navigate-to-chat cofx topic)))
+        (navigate-to-chat cofx topic))
       (create-public-chat-go
        cofx
        topic
@@ -298,20 +289,30 @@
     {:utils/show-popup {:title   (i18n/label :t/cant-open-public-chat)
                         :content (i18n/label :t/invalid-public-chat-topic)}}))
 
+(fx/defn profile-chat-created
+  {:events [::profile-chat-created]}
+  [{:keys [db] :as cofx} chat-id response navigate-to?]
+  (fx/merge
+   cofx
+   {:db db}
+   #(when response
+      (let [chat (chats-store/<-rpc (first (:chats response)))]
+        {:db (assoc-in db [:chats chat-id] chat)}))
+   #(when navigate-to?
+      {:dispatch-n [[:chat.ui/preload-chat-data chat-id]
+                    [:navigate-to :profile nil]]})))
+
 (fx/defn start-profile-chat
   "Starts a new profile chat"
   {:events [:start-profile-chat]}
-  [cofx profile-public-key]
-  (let [topic (profile-chat-topic profile-public-key)]
-    (when-not (active-chat? cofx topic)
-      (add-public-chat cofx topic profile-public-key false))))
-
-(fx/defn start-timeline-chat
-  "Starts a new timeline chat"
-  {:events [:chat/start-timeline-chat]}
-  [cofx]
-  (when-not (active-chat? cofx constants/timeline-chat-id)
-    (add-public-chat cofx constants/timeline-chat-id nil true)))
+  [cofx profile-public-key navigate-to?]
+  (let [chat-id (profile-chat-topic profile-public-key)]
+    (if (active-chat? cofx chat-id)
+      {:dispatch [::profile-chat-created chat-id nil navigate-to?]}
+      {::json-rpc/call [{:method "wakuext_createProfileChat"
+                         :params [{:ID profile-public-key}]
+                         :on-success #(re-frame/dispatch [::profile-chat-created chat-id % navigate-to?])
+                         :on-error #(log/error "failed to create profile chat" chat-id %)}]})))
 
 (fx/defn disable-chat-cooldown
   "Turns off chat cooldown (protection against message spamming)"
@@ -358,10 +359,8 @@
       (navigation/navigate-to-cofx cofx :profile-stack {:screen :my-profile})
       (fx/merge
        cofx
-       {:db (assoc db :contacts/identity identity)
-        :dispatch [:chat.ui/preload-chat-data (profile-chat-topic identity)]}
-       (start-profile-chat identity)
-       (navigation/navigate-to-cofx :profile nil)))))
+       {:db (assoc db :contacts/identity identity)}
+       (start-profile-chat identity true)))))
 
 (fx/defn clear-history-pressed
   {:events [:chat.ui/clear-history-pressed]}

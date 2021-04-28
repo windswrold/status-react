@@ -19,6 +19,7 @@
             [status-im.ui.components.invite.views :as invite]
             [status-im.ethereum.ens :as ens]
             [quo.platform :as platform]
+            [status-im.utils.identicon :as identicon]
             [status-im.ui.components.keyboard-avoid-presentation :as kb-presentation]
             [status-im.ui.components.animation :as animation]
             [status-im.ui.screens.chat.photos :as photos])
