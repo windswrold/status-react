@@ -75,6 +75,9 @@
 (defn subtract [anim-x anim-y]
   ((-> ^js rn .-Animated .-subtract) anim-x anim-y))
 
+(defn multiply [anim-x anim-y]
+  ((-> ^js rn .-Animated .-multiply) anim-x anim-y))
+
 (defn x [^js value-xy]
   (.-x value-xy))
 
@@ -86,6 +89,7 @@
 
 (defn easing-in [] (.-in ^js easing))
 (defn easing-out [] (.-out ^js easing))
+(defn easing-in-out [] (.-inOut ^js easing))
 
 (defn cubic [] (.-cubic ^js easing))
 (def bezier (.-bezier ^js easing))

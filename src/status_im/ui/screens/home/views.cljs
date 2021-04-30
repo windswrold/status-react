@@ -1,4 +1,5 @@
 (ns status-im.ui.screens.home.views
+  (:require-macros [status-im.utils.views :refer [defview letsubs]])
   (:require [re-frame.core :as re-frame]
             [reagent.core :as reagent]
             [status-im.i18n.i18n :as i18n]
@@ -28,7 +29,9 @@
             [status-im.ui.components.plus-button :as components.plus-button]
             [status-im.ui.components.tabbar.styles :as tabs.styles]
             [status-im.ui.screens.chat.sheets :as sheets]
-            [status-im.ui.components.animation :as animation])
+            [status-im.ui.components.animation :as animation]
+            ["react-native-animated-math" :default animated-math]
+            [quo.animated :as quo.animated])
   (:require-macros [status-im.utils.views :as views]))
 
 (defn welcome-image-wrapper []
@@ -45,70 +48,150 @@
                        :resize-mode :contain
                        :style       {:width image-size :height image-size}}])])))
 
-(defn translate-anim [translate-y-value translate-y-anim-value]
+(defn translate-anim [translate-y-value translate-y-anim-value duration]
   (animation/start
-   (animation/timing translate-y-anim-value {:toValue         translate-y-value
-                                             :duration        1000
-                                             :damping                   15
-                                             :mass                      0.7
-                                             :stiffness                 150
-                                             :overshootClamping         false
-                                             :restSpeedThreshold        0.1
-                                             :restDisplacementThreshold 0.1
-                                             :easing (.-ease ^js animation/easing)
-                                             :useNativeDriver true})))
-
-(defn translate-anim-2 [translate-y-value translate-y-anim-value]
-  (animation/start
-   (animation/spring translate-y-anim-value {:toValue         translate-y-value
-                                             :duration        1000
-                                             :velocity 0.1
-                                             :damping                   15
-                                             :mass                      0.7
-                                             :stiffness                 150
+   (animation/timing translate-y-anim-value {:toValue         3
+                                             :duration        duration
+                                            ;;  :damping                   15
+                                            ;;  :mass                      0.7
+                                            ;;  :stiffness                 150
+                                            ;;  :overshootClamping         false
                                             ;;  :restSpeedThreshold        0.1
                                             ;;  :restDisplacementThreshold 0.1
-                                             :easing (.-ease ^js animation/easing)
-                                             :useNativeDriver true})))
+                                            ;;  :easing (.-ease ^js animation/easing)
+                                             :easing ((animation/easing-out) (.-quad ^js animation/easing))
+                                             :useNativeDriver true})
+   #(animation/set-value translate-y-anim-value 1)))
 
-(defn welcome []
-  (let [emoji-1-translate-y-anim (animation/create-value 0)
-        emoji-1-translate-x-anim (animation/create-value 0)]
-    [react/view {:style styles/welcome-view}
-     [welcome-image-wrapper]
-     [react/i18n-text {:style styles/welcome-text :key :welcome-to-status}]
-     [react/view
-      [react/i18n-text {:style styles/welcome-text-description
-                        :key   :welcome-to-status-description}]]
-     [react/view {:align-items :center :margin-bottom 50 :background-color :green}
-      [quo/button {:on-press            #(do
-                                           (translate-anim 200 emoji-1-translate-x-anim)
-                                           (translate-anim-2 -50 emoji-1-translate-y-anim))
+(defn jump-anim [translate-y-value translate-y-anim-value duration]
+  (animation/start
+   (animation/parallel
+    [(animation/timing translate-y-anim-value {:toValue         (* -1.3 Math/PI)
+                                              ;; :velocity 0
+                                              ;; :deceleration 0.8
+
+                                               :duration        duration
+                                            ;;  :damping                   15
+                                            ;;  :mass                      20
+                                            ;;  :stiffness                 100
+                                            ;;  :overshootClamping         true
+                                            ;;  :restSpeedThreshold        0.1
+                                            ;;  :restDisplacementThreshold 0.1
+                                             :easing ((animation/easing-out) (.-quad ^js animation/easing))
+                                               :useNativeDriver true})])
+   #(animation/set-value translate-y-anim-value 0))
+  )
+
+(defn sin [animated-value]
+  (.sin animated-math animated-value))
+
+(defn cos [animated-value]
+  (.cos animated-math animated-value))
+
+(defview welcome []
+  (letsubs [width [:dimensions/window-width]]
+    (let [emoji-1-translate-y-anim (animation/create-value 0)
+          emoji-1-translate-x-anim (animation/create-value 1)
+          radius 120
+          radius-2 80
+          radius-3 130
+          radius-4 50
+          radius-5 150
+          direction-1 1
+          direction-2 -1
+          direction-3 1
+          direction-4 -1
+          direction-5 -1
+          v-radius-1 (* radius 2.2)
+          v-radius-2 270
+          v-radius-3 230
+          v-radius-4 190
+          v-radius-5 (* radius-5 1.3)]
+      [react/view {:style styles/welcome-view}
+       [welcome-image-wrapper]
+       [react/i18n-text {:style styles/welcome-text :key :welcome-to-status}]
+       [react/view
+        [react/i18n-text {:style styles/welcome-text-description
+                          :key   :welcome-to-status-description}]]
+       [react/view {:align-items :center :margin-bottom 50}
+        [quo/button {:on-press            #(do
+                                             (translate-anim 1 emoji-1-translate-x-anim 1800)
+                                             (jump-anim -50 emoji-1-translate-y-anim 1800))
                   ;;  :on-press            #(re-frame/dispatch [::multiaccounts.login/welcome-lets-go])
-                   :accessibility-label :lets-go-button}
-       (i18n/label :t/lets-go)]
-      [react/animated-view {:style {:position :absolute
-                                    :top 5
-                                    :left "45%"
-                                    :transform [{:rotate "25deg"}]}}
-       [react/text "🎉"]]
-      [react/animated-view {:style {:position :absolute
-                                    :top 15
-                                    :left "50%"
-                                    :transform [{:rotate "0deg"}]}}
-       [react/text "🎉"]]
-      [react/animated-view {:style {:position :absolute
-                                    :top 23
-                                    :left "-40%"
-                                    :transform [{:rotate "45deg"}]}}
-       [react/text "🎉"]]
-      [react/animated-view {:style {:position :absolute
-                                    :background-color :red
-                                    :top 25
-                                    :left "55%"
-                                    :transform [{:translateY emoji-1-translate-y-anim}
-                                                 {:translateX emoji-1-translate-x-anim}]}}
-       [react/text {:style {:transform [{:rotate "65deg"}]}} "🎉"]]]]))
+                     :accessibility-label :lets-go-button}
+         (i18n/label :t/lets-go)]
+        [react/animated-view {:style {:position :absolute
+                                      :top -20
+                                      :left (+ (* -1 direction-1 radius) (/ width 2) 50)
+                                      :opacity (animation/interpolate
+                                                emoji-1-translate-x-anim
+                                                {:inputRange  [1 1.1 2 2.9 3]
+                                                 :outputRange [0 1 1 1 0]})
+                                      :transform [{:translateY (animation/multiply (sin emoji-1-translate-y-anim) v-radius-1)}
+                                                  {:translateX (animation/multiply (cos emoji-1-translate-y-anim) (* direction-1 radius))}
+                                                  {:scale (animation/interpolate
+                                                           emoji-1-translate-x-anim
+                                                           {:inputRange  [1 2 3]
+                                                            :outputRange [1.25 1.75 2.5]})}]}}
+         [react/text "🙌"]]
+        [react/animated-view {:style {:position :absolute
+                                      :top 10
+                                      :left (+ (* -1 direction-2 radius-2) (/ width 2) -30)
+                                      :opacity (animation/interpolate
+                                                emoji-1-translate-x-anim
+                                                {:inputRange  [1 1.1 2 2.9 3]
+                                                 :outputRange [0 1 1 1 0]})
+                                      :transform [{:translateY (animation/multiply (sin emoji-1-translate-y-anim) v-radius-2)}
+                                                  {:translateX (animation/multiply (cos emoji-1-translate-y-anim) (* direction-2 radius-2))}
+                                                  {:scale (animation/interpolate
+                                                           emoji-1-translate-x-anim
+                                                           {:inputRange  [1 2 3]
+                                                            :outputRange [1.25 1.75 2.5]})}]}}
+         [react/text "🙏"]]
+        [react/animated-view {:style {:position :absolute
+                                      :top 20
+                                      :left (+ (* -1 direction-3 radius-3) (/ width 2) -60)
+                                      :opacity (animation/interpolate
+                                                emoji-1-translate-x-anim
+                                                {:inputRange  [1 1.1 2 2.9 3]
+                                                 :outputRange [0 1 1 1 0]})
+                                      :transform [{:translateY (animation/multiply (sin emoji-1-translate-y-anim) v-radius-3)}
+                                                  {:translateX (animation/multiply (cos emoji-1-translate-y-anim) (* direction-3 radius-3))}
+                                                  {:scale (animation/interpolate
+                                                           emoji-1-translate-x-anim
+                                                           {:inputRange  [1 2 3]
+                                                            :outputRange [1.25 1.75 2.5]})}]}}
+         [react/text "🎉"]]
+        [react/animated-view {:style {:position :absolute
+                                      ;; :background-color :red
+                                      :top 5
+                                      :left (+ (* -1 direction-4 radius-4) (/ width 2) 40)
+                                      :opacity (animation/interpolate
+                                                emoji-1-translate-x-anim
+                                                {:inputRange  [1 1.1 2 2.9 3]
+                                                 :outputRange [0 1 1 1 0]})
+                                      :transform [{:translateY (animation/multiply (sin emoji-1-translate-y-anim) v-radius-4)}
+                                                  {:translateX (animation/multiply (cos emoji-1-translate-y-anim) (* direction-4 radius-4))}
+                                                  {:scale (animation/interpolate
+                                                           emoji-1-translate-x-anim
+                                                           {:inputRange  [1 2 3]
+                                                            :outputRange [1.25 1.75 2.5]})}]}}
+         [react/text {:style {:transform [{:rotate "65deg"}]}} "🎉"]]
+        [react/animated-view {:style {:position :absolute
+                                      ;; :background-color :red
+                                      :top 0
+                                      :left (+ (* -1 direction-5 radius-5) (/ width 2))
+                                      :opacity (animation/interpolate
+                                                emoji-1-translate-x-anim
+                                                {:inputRange  [1 1.1 2 2.9 3]
+                                                 :outputRange [0 1 1 1 0]})
+                                      :transform [{:translateY (animation/multiply (sin emoji-1-translate-y-anim) v-radius-5)}
+                                                  {:translateX (animation/multiply (cos emoji-1-translate-y-anim) (* direction-5 radius-5))}
+                                                  {:scale (animation/interpolate
+                                                           emoji-1-translate-x-anim
+                                                           {:inputRange  [1 2 3]
+                                                            :outputRange [1.25 1.75 2.5]})}]}}
+         [react/text {:style {:transform [{:rotate "65deg"}]}} "🎉"]]]])))
 
 (defn home-tooltip-view []
   [react/view (styles/chat-tooltip)

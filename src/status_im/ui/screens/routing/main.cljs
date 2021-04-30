@@ -62,7 +62,8 @@
 (views/defview main-nav-component []
   (views/letsubs [logged-in? [:multiaccount/logged-in?]
                   keycard-account? [:multiaccounts/keycard-account?]]
-    [main-stack (merge {:header-mode :none}
+    [main-stack (merge {:header-mode :none
+                        :initial-route-name :intro-stack}
                        ;; https://github.com/react-navigation/react-navigation/issues/6520
                        (when platform/ios?
                          {:mode :modal}))

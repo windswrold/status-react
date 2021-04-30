@@ -67,6 +67,11 @@
                                        :configureNext (fn [])}
             :requireNativeComponent   (fn [] {:propTypes ""})}))
 
+(def react-native-animated-math
+  (clj->js {:sin #js{}
+            :cos #js{}
+            :tan #js{}}))
+
 (set! js/ReactNative react-native)
 
 (def reanimated-bottom-sheet           #js {:default #js {}})

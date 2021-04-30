@@ -6601,6 +6601,11 @@ react-is@^16.12.0, react-is@^16.13.0, react-is@^16.7.0, react-is@^16.8.1, react-
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
+react-native-animated-math@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/react-native-animated-math/-/react-native-animated-math-0.3.1.tgz#3c7c08adde1a2db0b6231a2da2b681b77d456bd3"
+  integrity sha512-C1kI5mNuYKqnmjK1EgSUoR7Rht8hM3R2CqI/behR0OWuclbG+CrgIX3ThJ6AdXwHZIDx7gDJnfx5G69EljwZvA==
+
 react-native-background-timer@^2.1.1:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/react-native-background-timer/-/react-native-background-timer-2.2.0.tgz#ff82d30899209b924983cc00e6ce174b8de5054a"

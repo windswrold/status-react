@@ -651,7 +651,7 @@ SPEC CHECKSUMS:
   Flipper-RSocket: 127954abe8b162fcaf68d2134d34dc2bd7076154
   FlipperKit: f42987ea58737ac0fb3fbc38f8e703452ba56940
   Folly: b73c3869541e86821df3c387eb0af5f65addfab4
-  glog: cee4319f395bad5865ef3f32466c2e0ae677432c
+  glog: cdbe0a638e5040c32d22330bc25358672fbff0dc
   Keycard: dd96182888da0aacf4de821b641103143bbb26cc
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: 1aa4f6a6ee7256b83db99ec1ccdaa80d10f9af9b
