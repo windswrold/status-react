@@ -50,7 +50,7 @@
 
 (defn translate-anim [translate-y-value translate-y-anim-value duration]
   (animation/start
-   (animation/timing translate-y-anim-value {:toValue         3
+   (animation/spring translate-y-anim-value {:toValue         3
                                              :duration        duration
                                             ;;  :damping                   15
                                             ;;  :mass                      0.7
@@ -59,6 +59,13 @@
                                             ;;  :restSpeedThreshold        0.1
                                             ;;  :restDisplacementThreshold 0.1
                                             ;;  :easing (.-ease ^js animation/easing)
+                                             :damping                   200
+                                               :mass                      60
+                                             :stiffness                 300
+                                             :overshootClamping         true
+                                             :bouncyFactor              0
+                                             :restSpeedThreshold        0.001
+                                             :restDisplacementThreshold 0.001
                                              :easing ((animation/easing-out) (.-quad ^js animation/easing))
                                              :useNativeDriver true})
    #(animation/set-value translate-y-anim-value 1)))
@@ -66,8 +73,8 @@
 (defn jump-anim [translate-y-value translate-y-anim-value duration]
   (animation/start
    (animation/parallel
-    [(animation/timing translate-y-anim-value {:toValue         (* -1.3 Math/PI)
-                                              ;; :velocity 0
+    [(animation/spring translate-y-anim-value {:toValue         (* -1.3 Math/PI)
+                                              ;; :velocity 3
                                               ;; :deceleration 0.8
 
                                                :duration        duration
@@ -77,7 +84,14 @@
                                             ;;  :overshootClamping         true
                                             ;;  :restSpeedThreshold        0.1
                                             ;;  :restDisplacementThreshold 0.1
-                                             :easing ((animation/easing-out) (.-quad ^js animation/easing))
+                                               :damping                   200
+                                               :mass                      60
+                                               :stiffness                 300
+                                               :overshootClamping         true
+                                               :bouncyFactor              0
+                                               :restSpeedThreshold        0.001
+                                               :restDisplacementThreshold 0.001
+                                               :easing ((animation/easing-out) (.-quad ^js animation/easing))
                                                :useNativeDriver true})])
    #(animation/set-value translate-y-anim-value 0))
   )
@@ -132,7 +146,7 @@
                                                   {:scale (animation/interpolate
                                                            emoji-1-translate-x-anim
                                                            {:inputRange  [1 2 3]
-                                                            :outputRange [1.25 1.75 2.5]})}]}}
+                                                            :outputRange [1 2 1.5]})}]}}
          [react/text "🙌"]]
         [react/animated-view {:style {:position :absolute
                                       :top 10
@@ -146,7 +160,7 @@
                                                   {:scale (animation/interpolate
                                                            emoji-1-translate-x-anim
                                                            {:inputRange  [1 2 3]
-                                                            :outputRange [1.25 1.75 2.5]})}]}}
+                                                            :outputRange [1 2 1.5]})}]}}
          [react/text "🙏"]]
         [react/animated-view {:style {:position :absolute
                                       :top 20
@@ -160,7 +174,7 @@
                                                   {:scale (animation/interpolate
                                                            emoji-1-translate-x-anim
                                                            {:inputRange  [1 2 3]
-                                                            :outputRange [1.25 1.75 2.5]})}]}}
+                                                            :outputRange [1 2 1.5]})}]}}
          [react/text "🎉"]]
         [react/animated-view {:style {:position :absolute
                                       ;; :background-color :red
@@ -175,7 +189,7 @@
                                                   {:scale (animation/interpolate
                                                            emoji-1-translate-x-anim
                                                            {:inputRange  [1 2 3]
-                                                            :outputRange [1.25 1.75 2.5]})}]}}
+                                                            :outputRange [1 2 1.5]})}]}}
          [react/text {:style {:transform [{:rotate "65deg"}]}} "🎉"]]
         [react/animated-view {:style {:position :absolute
                                       ;; :background-color :red
@@ -190,7 +204,7 @@
                                                   {:scale (animation/interpolate
                                                            emoji-1-translate-x-anim
                                                            {:inputRange  [1 2 3]
-                                                            :outputRange [1.25 1.75 2.5]})}]}}
+                                                            :outputRange [1 2 1.5]})}]}}
          [react/text {:style {:transform [{:rotate "65deg"}]}} "🎉"]]]])))
 
 (defn home-tooltip-view []
