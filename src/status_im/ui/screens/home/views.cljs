@@ -82,12 +82,19 @@
 
 (defonce visible (reagent/atom false))
 
+(defn random-int-between [min max]
+  (Math/floor (+ (* (Math/random) (+ (- max min) 1)) min)))
+
+(defn random-float-between [min max]
+  (+ (* (Math/random) (- max min)) min))
+
 (defview animated-emoji [{:keys [direction top left radius v-radius translate-anim scale-anim emoji]}]
   (letsubs [width [:dimensions/window-width]]
            (let [direction-multiplier (cond
                                         (= direction :left) 1
                                         (= direction :right) -1
-                                        :else 1)]
+                                        :else 1)
+                 rotation-degree (* direction-multiplier -1 30 (random-float-between 1 1.3))]
              [react/animated-view {:style {:position :absolute
                                            :top (or top 0)
                                            :left (+ (* -1 direction-multiplier radius) (/ width 2) (or left 0))
@@ -100,71 +107,32 @@
                                                        {:scale (animation/interpolate
                                                                 scale-anim
                                                                 {:inputRange  [1 2 3]
-                                                                 :outputRange [1 2 1.5]})}]}}
-              [react/text emoji]])))
+                                                                 :outputRange [1 2.2 1.5]})}]}}
+              [react/animated-view {:style {:transform [{:rotate (animation/interpolate
+                                                                  scale-anim
+                                                                  {:inputRange  [1 3]
+                                                                   :outputRange ["0deg" (str rotation-degree 'deg)]})}]}}
+               [react/text emoji]]])))
 
-(defn animated-emojis []
-  (let [translate-anim (animation/create-value 0)
-        scale-anim (animation/create-value 1)
-        radius-1 120
-        radius-2 80
-        radius-3 130
-        radius-4 50
-        radius-5 150
-        direction-1 :left
-        direction-2 :right
-        direction-3 :left
-        direction-4 :right
-        direction-5 :right
-        v-radius-1 (* radius-1 2.2)
-        v-radius-2 270
-        v-radius-3 230
-        v-radius-4 190
-        v-radius-5 (* radius-5 1.3)]
+(defn animated-emojis [emoji-count]
+  (let [emojis ["🙌" "🎉" "👏" "👍" "🚀" "💙" "🤩" "♥️" "🤑" "💎" "🙈" "🥰" "🌈"]
+        translate-anim (animation/create-value 0)
+        scale-anim (animation/create-value 1)]
     {:component-did-mount (jump-anim translate-anim scale-anim)}
     [react/view {:style {:position :absolute
                          :top 0
                          :left 0
                          :background-color :green}}
-     [animated-emoji {:top -20
-                      :left 50
-                      :radius radius-1
-                      :v-radius v-radius-1
-                      :direction direction-1
-                      :translate-anim translate-anim
-                      :scale-anim scale-anim
-                      :emoji "🙌"}]
-     [animated-emoji {:top 10
-                      :left -30
-                      :radius radius-2
-                      :v-radius v-radius-2
-                      :direction direction-2
-                      :translate-anim translate-anim
-                      :scale-anim scale-anim
-                      :emoji "🙏"}]
-     [animated-emoji {:top 20
-                      :left -60
-                      :radius radius-3
-                      :v-radius v-radius-3
-                      :direction direction-3
-                      :translate-anim translate-anim
-                      :scale-anim scale-anim
-                      :emoji "🎉"}]
-     [animated-emoji {:top 5
-                      :left 40
-                      :radius radius-4
-                      :v-radius v-radius-4
-                      :direction direction-4
-                      :translate-anim translate-anim
-                      :scale-anim scale-anim
-                      :emoji "🎉"}]
-     [animated-emoji {:top 0
-                      :radius radius-5
-                      :v-radius v-radius-5
-                      :direction direction-5
-                      :translate-anim translate-anim
-                      :scale-anim scale-anim
-                      :emoji "🎉"}]]))
+     (map (fn [num]
+            (let [radius (random-int-between 50 160)]
+              [animated-emoji {:top (random-int-between -50 50)
+                               :left (random-int-between -50 50)
+                               :radius radius
+                               :v-radius (* radius (random-float-between 1.1 2.2))
+                               :direction (if (= (mod num 2) 0) :left :right)
+                               :translate-anim translate-anim
+                               :scale-anim scale-anim
+                               :emoji (rand-nth emojis)}])) (range (or emoji-count 40)))]))
 
 (defn welcome []
   [react/view {:style styles/welcome-view}
