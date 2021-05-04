@@ -131,43 +131,8 @@
                              %
                              chats))}))
 
-(fx/defn upsert-chat
-  "Upsert chat when not deleted"
-  [{:keys [db] :as cofx} {:keys [chat-id] :as chat-props} on-success]
-  (fx/merge cofx
-            (ensure-chat chat-props)
-            #(chats-store/save-chat % (get-in % [:db :chats chat-id]) on-success)))
-
-(fx/defn handle-save-chat
-  {:events [::save-chat]}
-  [{:keys [db] :as cofx} chat-id on-success]
-  (chats-store/save-chat cofx (get-in db [:chats chat-id]) on-success))
-
-(fx/defn add-public-chat
-  "Adds new public group chat to db"
-  [cofx topic profile-public-key timeline?]
-  (upsert-chat cofx
-               {:chat-id                        topic
-                :timeline?                      timeline?
-                :profile-public-key             profile-public-key
-                :is-active                      true
-                :name                           topic
-                :chat-name                      (str "#" topic)
-                :group-chat                     true
-                :chat-type                      (cond timeline?
-                                                      constants/timeline-chat-type
-                                                      profile-public-key
-                                                      constants/profile-chat-type
-                                                      :else
-                                                      constants/public-chat-type)
-                :contacts                       #{}
-                :public?                        true
-                :unviewed-messages-count        0}
-               nil))
-
 (fx/defn clear-history
   "Clears history of the particular chat"
-  {:events [:chat.ui/clear-history]}
   [{:keys [db] :as cofx} chat-id remove-chat?]
   (let [{:keys [last-message public?
                 deleted-at-clock-value]} (get-in db [:chats chat-id])
@@ -176,24 +141,39 @@
                                    (or (:clock-value last-message)
                                        deleted-at-clock-value
                                        (utils.clocks/send 0)))]
-    (fx/merge
-     cofx
-     {:db            (-> db
-                         (assoc-in [:messages chat-id] {})
-                         (update-in [:message-lists] dissoc chat-id)
-                         (update-in [:chats chat-id] merge
-                                    {:last-message              nil
-                                     :unviewed-messages-count   0
-                                     :deleted-at-clock-value    last-message-clock-value}))}
-     (messages-store/delete-messages-by-chat-id chat-id)
-     #(chats-store/save-chat % (get-in % [:db :chats chat-id]) nil))))
+    {:db            (-> db
+                        (assoc-in [:messages chat-id] {})
+                        (update-in [:message-lists] dissoc chat-id)
+                        (update-in [:chats chat-id] merge
+                                   {:last-message              nil
+                                    :unviewed-messages-count   0
+                                    :deleted-at-clock-value    last-message-clock-value}))}))
+
+(fx/defn clear-history-handler
+  "Clears history of the particular chat"
+  {:events [:chat.ui/clear-history]}
+  [{:keys [db] :as cofx} chat-id remove-chat?]
+  (fx/merge cofx
+            {:db db
+             ::json-rpc/call [{:method "wakuext_clearHistory"
+                               :params [{:ID chat-id}]
+                               :on-success #(log/debug "chat history cleared" chat-id)
+                               :on-error #(log/error "failed to clear history " chat-id %)}]}
+            (clear-history chat-id remove-chat?)))
 
 (fx/defn deactivate-chat
   "Deactivate chat in db, no side effects"
   [{:keys [db now] :as cofx} chat-id]
-  {:db (-> db
-           (assoc-in [:chats chat-id :is-active] false)
-           (assoc-in [:current-chat-id] nil))})
+  (fx/merge
+   cofx
+   {:db (-> db
+            (assoc-in [:chats chat-id :is-active] false)
+            (assoc-in [:current-chat-id] nil))
+    ::json-rpc/call [{:method "wakuext_deactivateChat"
+                      :params [{:ID chat-id}]
+                      :on-success #(log/debug "chat deactivated" chat-id)
+                      :on-error #(log/error "failed to create public chat" chat-id %)}]}
+   (clear-history chat-id true)))
 
 (fx/defn offload-messages
   {:events [:offload-messages]}
@@ -219,7 +199,6 @@
   (fx/merge cofx
             (deactivate-chat chat-id)
             (offload-messages chat-id)
-            (clear-history chat-id true)
             (when (not (= (:view-id db) :home))
               (navigation/navigate-to-cofx :home {}))))
 
@@ -240,17 +219,23 @@
             (preload-chat-data chat-id)
             (navigation/navigate-to-cofx  :chat-stack {:screen :chat})))
 
+(fx/defn handle-one-to-one-chat-created
+  {:events [::one-to-one-chat-created]}
+  [{:keys [db] :as cofx} chat-id response]
+  (let [chat (chats-store/<-rpc (first (:chats response)))]
+    {:db (assoc-in db [:chats chat-id] chat)
+     :dispatch [:chat.ui/navigate-to-chat chat-id]}))
+
 (fx/defn start-chat
   "Start a chat, making sure it exists"
   {:events [:chat.ui/start-chat]}
   [{:keys [db] :as cofx} chat-id]
   ;; don't allow to open chat with yourself
   (when (not= (multiaccounts.model/current-public-key cofx) chat-id)
-    (fx/merge cofx
-              {:dispatch [:chat.ui/navigate-to-chat chat-id]}
-              (upsert-chat {:chat-id   chat-id
-                            :is-active true}
-                           nil))))
+    {::json-rpc [{:method "wakuext_createOneToOneChat"
+                  :params [{:ID chat-id}]
+                  :on-success #(re-frame/dispatch [::one-to-one-chat-created chat-id %])
+                  :on-error #(log/error "failed to create one-to-on chat" chat-id %)}]}))
 
 (defn profile-chat-topic [public-key]
   (str "@" public-key))
@@ -262,11 +247,9 @@
   {:events [::public-chat-created]}
   [{:keys [db] :as cofx} chat-id {:keys [dont-navigate?]} response]
   (let [chat (chats-store/<-rpc (first (:chats response)))]
-    (fx/merge
-     cofx
-     {:db (assoc-in db [:chats chat-id] chat)
-      :dispatch (when-not dont-navigate?
-                  [:chat.ui/navigate-to-chat chat-id])})))
+    {:db (assoc-in db [:chats chat-id] chat)
+     :dispatch (when-not dont-navigate?
+                 [:chat.ui/navigate-to-chat chat-id])}))
 
 (fx/defn create-public-chat-go [cofx chat-id opts]
   {::json-rpc/call [{:method "wakuext_createPublicChat"
@@ -334,22 +317,21 @@
   (log/error "mute chat failed" chat-id error)
   {:db (assoc-in db [:chats chat-id :muted] (not muted?))})
 
+(fx/defn mute-chat-successful
+  {:events [::mute-chat-successful]}
+  [{:keys [db]} chat-id response]
+  (let [chat (chats-store/<-rpc (first (:chats response)))]
+    {:db (assoc-in db [:chats chat-id] chat)}))
+
 (fx/defn mute-chat
   {:events [::mute-chat-toggled]}
   [{:keys [db] :as cofx} chat-id muted?]
-  (let [method (if muted? "muteChat" "unmuteChat")
-        chat (get-in db [:chats chat-id])]
-    ;; chat does not exist, create and then mute
-    (if-not chat
-      (upsert-chat cofx
-                   {:is-active true
-                    :chat-id chat-id}
-                   #(re-frame/dispatch [::mute-chat-toggled chat-id muted?]))
-      {:db (assoc-in db [:chats chat-id :muted] muted?)
-       ::json-rpc/call [{:method (json-rpc/call-ext-method method)
-                         :params [chat-id]
-                         :on-error #(re-frame/dispatch [::mute-chat-failed chat-id muted? %])
-                         :on-success #(log/info method "successful" chat-id)}]})))
+  (let [method (if muted? "muteChat" "unmuteChat")]
+    {:db (assoc-in db [:chats chat-id :muted] muted?)
+     ::json-rpc/call [{:method (json-rpc/call-ext-method method)
+                       :params [chat-id]
+                       :on-error #(re-frame/dispatch [::mute-chat-failed chat-id muted? %])
+                       :on-success #(re-frame/dispatch [::mute-chat-successful chat-id %])}]}))
 
 (fx/defn show-profile
   {:events [:chat.ui/show-profile]}

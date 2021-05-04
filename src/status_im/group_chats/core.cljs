@@ -102,9 +102,6 @@
   [cofx chat-id]
   (fx/merge cofx
             (models.chat/deactivate-chat chat-id)
-            (models.chat/upsert-chat {:chat-id   chat-id
-                                      :is-active false}
-                                     nil)
             (navigation/navigate-to-cofx :home {})))
 
 (def not-blank?

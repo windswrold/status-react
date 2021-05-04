@@ -766,8 +766,9 @@
 (re-frame/reg-sub
  :chats/synced-to
  (fn [[_ chat-id] _]
-   [(re-frame/subscribe [:chat-by-id chat-id])])
- (fn [{:keys [synced-to]}]
+   (re-frame/subscribe [:chat-by-id chat-id]))
+ (fn [{:keys [synced-to] :as chat}]
+   (println "CHAT2" synced-to "SYNCED" chat)
    synced-to))
 
 (re-frame/reg-sub
@@ -952,6 +953,7 @@
     (re-frame/subscribe [:chats/synced-to chat-id])])
  (fn [[message-list messages synced-to]]
    ;;TODO (perf)
+   (println "SYNCED TO" synced-to)
    (-> (models.message-list/->seq message-list)
        (chat.db/add-datemarks)
        (hydrate-messages messages)

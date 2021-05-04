@@ -90,6 +90,7 @@
    "wakuext_getLinkPreviewWhitelist" {}
    "wakuext_getLinkPreviewData" {}
    "wakuext_requestCommunityInfoFromMailserver" {}
+   "wakuext_deactivateChat" {}
    ;;TODO not used anywhere?
    "wakuext_deleteChat" {}
    "wakuext_saveContact" {}
