@@ -59,7 +59,7 @@
    (animation/parallel
     [(animation/spring scale-anim-value {:toValue         3
                                          :damping                   200
-                                         :mass                      60
+                                         :mass                      30
                                          :stiffness                 300
                                          :overshootClamping         true
                                          :bouncyFactor              0
@@ -69,7 +69,7 @@
                                          :useNativeDriver true})
      (animation/spring translate-anim-value {:toValue         (* -1.3 Math/PI)
                                              :damping                   200
-                                             :mass                      60
+                                             :mass                      30
                                              :stiffness                 300
                                              :overshootClamping         true
                                              :bouncyFactor              0
@@ -100,8 +100,8 @@
                                            :left (+ (* -1 direction-multiplier radius) (/ width 2) (or left 0))
                                            :opacity (animation/interpolate
                                                      scale-anim
-                                                     {:inputRange  [1 1.1 2 2.9 3]
-                                                      :outputRange [0 1 1 1 0]})
+                                                     {:inputRange  [1 1.5 2.5 3]
+                                                      :outputRange [0 1 0.5 0]})
                                            :transform [{:translateY (animation/multiply (sin translate-anim) v-radius)}
                                                        {:translateX (animation/multiply (cos translate-anim) (* direction-multiplier radius))}
                                                        {:scale (animation/interpolate
@@ -132,7 +132,7 @@
                                :direction (if (= (mod num 2) 0) :left :right)
                                :translate-anim translate-anim
                                :scale-anim scale-anim
-                               :emoji (rand-nth emojis)}])) (range (or emoji-count 40)))]))
+                               :emoji (rand-nth emojis)}])) (range (or emoji-count 6)))]))
 
 (defn welcome []
   [react/view {:style styles/welcome-view}
@@ -142,8 +142,12 @@
         [react/i18n-text {:style styles/welcome-text-description
                           :key   :welcome-to-status-description}]]
        [react/view {:align-items :center :margin-bottom 50}
-        [quo/button {:on-press            #(swap! visible not)
-                  ;;  :on-press            #(re-frame/dispatch [::multiaccounts.login/welcome-lets-go])
+        [quo/button {:on-press            (fn []
+                                            (swap! visible not)
+                                            (js/setTimeout
+                                             (fn []
+                                               (re-frame/dispatch [::multiaccounts.login/welcome-lets-go]))
+                                             2000))
                      :accessibility-label :lets-go-button}
          (i18n/label :t/lets-go)]
         (when @visible [animated-emojis])]])
