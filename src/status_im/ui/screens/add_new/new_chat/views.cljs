@@ -116,127 +116,127 @@
                                      (translate-anim 0 my-profile-button-anim-y))
                   keyboard-show-event (if platform/android? "keyboardDidShow" "keyboardWillShow")
                   keyboard-hide-event (if platform/android? "keyboardDidHide" "keyboardWillHide")]
-                 {:component-did-mount
-                  (fn [_]
-                    (reset! keyboard-show-listener (.addListener react/keyboard keyboard-show-event on-keyboard-show))
-                    (reset! keyboard-hide-listener (.addListener react/keyboard keyboard-hide-event on-keyboard-hide)))
-                  :component-will-unmount
-                  (fn []
-                    (some-> ^js @keyboard-show-listener .remove)
-                    (some-> ^js @keyboard-hide-listener .remove))}
-                 [kb-presentation/keyboard-avoiding-view {:style {:flex 1}}
-                  [react/view {:style {:flex 1}}
-                   [topbar/topbar
-                    {:title  (i18n/label :t/new-chat)
-                     :modal? true
-                     :right-accessories
-                     [{:icon                :qr
-                       :accessibility-label :scan-contact-code-button
-                       :on-press            #(re-frame/dispatch [::qr-scanner/scan-code
-                                                                 {:title   (i18n/label :t/new-chat)
-                                                                  :handler :contact/qr-code-scanned}])}]}]
-                   [react/view {:flex-direction :row
-                                :padding 16}
-                    [react/view {:flex 1}
-                     [quo/text-input
-                      {:on-change-text
-                       #(do
-                          (reset! search-value %)
-                          (re-frame/dispatch [:set-in [:contacts/new-identity :state] :searching])
-                          (debounce/debounce-and-dispatch [:new-chat/set-new-identity %] 600))
-                       :on-submit-editing
-                       #(when (= state :valid)
-                          (debounce/dispatch-and-chill [:contact.ui/contact-code-submitted false nil] 3000))
-                       :placeholder         (i18n/label :t/enter-contact-code)
-                       :show-cancel         false
-                       :accessibility-label :enter-contact-code-input
-                       :auto-capitalize     :none
-                       :return-key-type     :go
-                       :monospace           true
-                       :auto-correct        false}]]]
-                   [react/scroll-view {:style {:flex 1}
-                                       :keyboard-dismiss-mode :on-drag
-                                       :keyboard-should-persist-taps :handled}
-                    [react/view (when (and
-                                       (= (count contacts) 0)
-                                       (= @search-value ""))
-                                  {:flex 1})
-                     (if (and
+    {:component-did-mount
+     (fn [_]
+       (reset! keyboard-show-listener (.addListener react/keyboard keyboard-show-event on-keyboard-show))
+       (reset! keyboard-hide-listener (.addListener react/keyboard keyboard-hide-event on-keyboard-hide)))
+     :component-will-unmount
+     (fn []
+       (some-> ^js @keyboard-show-listener .remove)
+       (some-> ^js @keyboard-hide-listener .remove))}
+    [kb-presentation/keyboard-avoiding-view {:style {:flex 1}}
+     [react/view {:style {:flex 1}}
+      [topbar/topbar
+       {:title  (i18n/label :t/new-chat)
+        :modal? true
+        :right-accessories
+        [{:icon                :qr
+          :accessibility-label :scan-contact-code-button
+          :on-press            #(re-frame/dispatch [::qr-scanner/scan-code
+                                                    {:title   (i18n/label :t/new-chat)
+                                                     :handler :contact/qr-code-scanned}])}]}]
+      [react/view {:flex-direction :row
+                   :padding 16}
+       [react/view {:flex 1}
+        [quo/text-input
+         {:on-change-text
+          #(do
+             (reset! search-value %)
+             (re-frame/dispatch [:set-in [:contacts/new-identity :state] :searching])
+             (debounce/debounce-and-dispatch [:new-chat/set-new-identity %] 600))
+          :on-submit-editing
+          #(when (= state :valid)
+             (debounce/dispatch-and-chill [:contact.ui/contact-code-submitted false nil] 3000))
+          :placeholder         (i18n/label :t/enter-contact-code)
+          :show-cancel         false
+          :accessibility-label :enter-contact-code-input
+          :auto-capitalize     :none
+          :return-key-type     :go
+          :monospace           true
+          :auto-correct        false}]]]
+      [react/scroll-view {:style {:flex 1}
+                          :keyboard-dismiss-mode :on-drag
+                          :keyboard-should-persist-taps :handled}
+       [react/view (when (and
                           (= (count contacts) 0)
                           (= @search-value ""))
-                       [react/view {:flex 1
-                                    :align-items :center
-                                    :padding-horizontal 58
-                                    :padding-top 160}
-                        [quo/text {:size  :base
-                                   :align :center
-                                   :color :secondary}
-                         (i18n/label :t/you-dont-have-contacts-invite-friends)]
-                        [invite/button]]
-                       [list/flat-list {:data      (filter-contacts @search-value contacts)
-                                        :key-fn    :address
-                                        :render-fn render-row}])]
-                    (when-not (= @search-value "")
-                      [react/view
-                       [quo/text {:style {:margin-horizontal 16
-                                          :margin-vertical 14}
-                                  :size  :base
-                                  :align :left
-                                  :color :secondary}
-                        (i18n/label :t/non-contacts)]
-                       (when (and (= state :searching)
-                                  (is-valid-username? @search-value))
-                         [rn/activity-indicator {:color colors/gray
-                                                 :size  (if platform/android? :large :small)}])
-                       (if (= state :valid)
-                         [quo/list-item
-                          (merge
-                           {:title    (or ens-name (gfycat/generate-gfy public-key))
-                            :subtitle (if ens-name (gfycat/generate-gfy public-key) (utils/get-shortened-address public-key))
-                            :icon     [chat-icon/contact-icon-contacts-tab
-                                       (identicon/identicon public-key)]
-                            :on-press #(re-frame/dispatch [:chat.ui/start-chat public-key])}
-                           (when ens-name {:subtitle-secondary public-key}))]
-                         [quo/text {:style {:margin-horizontal 16}
-                                    :size  :base
-                                    :align :center
-                                    :color :secondary}
-                          (if (is-valid-username? @search-value)
-                            (when (= state :error)
-                              (get-validation-label error))
-                            (i18n/label :t/invalid-username-or-key))])])]
-                   (when-not (and
-                              (= (count contacts) 0)
-                              (= @search-value ""))
-                     [react/animated-view {:style {:height 36
-                                                   :width 124
-                                                   :position :absolute
-                                                   :bottom 42
-                                                   :transform [{:translateY my-profile-button-anim-y}]
-                                                   :align-self :center}}
-                      [react/touchable-opacity {:style {:padding-horizontal 2
-                                                        :height 36
-                                                        :width 124
-                                                        :background-color colors/blue
-                                                        :border-radius 18
-                                                        :elevation 4
-                                                        :shadow-offset {:width 0 :height 4}
-                                                        :shadow-color "rgba(0, 34, 51, 0.16)"
-                                                        :shadow-radius 4
-                                                        :shadow-opacity 1}
-                                                :on-press on-share}
-                       [react/view {:style {:flex 1
-                                            :flex-direction :row
-                                            :align-items :center}}
-                        [photos/photo
-                         (multiaccounts/displayed-photo account)
-                         {:size 32
-                          :accessibility-label :current-account-photo}]
-                        [quo/text {:size  :base
-                                   :weight :medium
-                                   :color :inverse
-                                   :style {:margin-left 6}}
-                         (i18n/label :t/my-profile)]]]])]]))
+                     {:flex 1})
+        (if (and
+             (= (count contacts) 0)
+             (= @search-value ""))
+          [react/view {:flex 1
+                       :align-items :center
+                       :padding-horizontal 58
+                       :padding-top 160}
+           [quo/text {:size  :base
+                      :align :center
+                      :color :secondary}
+            (i18n/label :t/you-dont-have-contacts-invite-friends)]
+           [invite/button]]
+          [list/flat-list {:data      (filter-contacts @search-value contacts)
+                           :key-fn    :address
+                           :render-fn render-row}])]
+       (when-not (= @search-value "")
+         [react/view
+          [quo/text {:style {:margin-horizontal 16
+                             :margin-vertical 14}
+                     :size  :base
+                     :align :left
+                     :color :secondary}
+           (i18n/label :t/non-contacts)]
+          (when (and (= state :searching)
+                     (is-valid-username? @search-value))
+            [rn/activity-indicator {:color colors/gray
+                                    :size  (if platform/android? :large :small)}])
+          (if (= state :valid)
+            [quo/list-item
+             (merge
+              {:title    (or ens-name (gfycat/generate-gfy public-key))
+               :subtitle (if ens-name (gfycat/generate-gfy public-key) (utils/get-shortened-address public-key))
+               :icon     [chat-icon/contact-icon-contacts-tab
+                          (identicon/identicon public-key)]
+               :on-press #(re-frame/dispatch [:chat.ui/start-chat public-key])}
+              (when ens-name {:subtitle-secondary public-key}))]
+            [quo/text {:style {:margin-horizontal 16}
+                       :size  :base
+                       :align :center
+                       :color :secondary}
+             (if (is-valid-username? @search-value)
+               (when (= state :error)
+                 (get-validation-label error))
+               (i18n/label :t/invalid-username-or-key))])])]
+      (when-not (and
+                 (= (count contacts) 0)
+                 (= @search-value ""))
+        [react/animated-view {:style {:height 36
+                                      :width 124
+                                      :position :absolute
+                                      :bottom 42
+                                      :transform [{:translateY my-profile-button-anim-y}]
+                                      :align-self :center}}
+         [react/touchable-opacity {:style {:padding-horizontal 2
+                                           :height 36
+                                           :width 124
+                                           :background-color colors/blue
+                                           :border-radius 18
+                                           :elevation 4
+                                           :shadow-offset {:width 0 :height 4}
+                                           :shadow-color "rgba(0, 34, 51, 0.16)"
+                                           :shadow-radius 4
+                                           :shadow-opacity 1}
+                                   :on-press on-share}
+          [react/view {:style {:flex 1
+                               :flex-direction :row
+                               :align-items :center}}
+           [photos/photo
+            (multiaccounts/displayed-photo account)
+            {:size 32
+             :accessibility-label :current-account-photo}]
+           [quo/text {:size  :base
+                      :weight :medium
+                      :color :inverse
+                      :style {:margin-left 6}}
+            (i18n/label :t/my-profile)]]]])]]))
 
 (defn- nickname-input [entered-nickname]
   [quo/text-input
@@ -252,53 +252,53 @@
 (views/defview new-contact []
   (views/letsubs [{:keys [state ens-name public-key error]} [:contacts/new-identity]
                   entered-nickname (reagent/atom "")]
-                 [react/view {:style {:flex 1}}
-                  [topbar/topbar
-                   {:title  (i18n/label :t/new-contact)
-                    :modal? true
-                    :right-accessories
-                    [{:icon                :qr
-                      :accessibility-label :scan-contact-code-button
-                      :on-press            #(re-frame/dispatch [::qr-scanner/scan-code
-                                                                {:title        (i18n/label :t/new-contact)
-                                                                 :handler      :contact/qr-code-scanned
-                                                                 :new-contact? true}])}]}]
-                  [react/view {:flex-direction :row
-                               :padding        16}
-                   [react/view {:flex          1
-                                :padding-right 16}
-                    [quo/text-input
-                     {:on-change-text
-                      #(do
-                         (re-frame/dispatch [:set-in [:contacts/new-identity :state] :searching])
-                         (debounce/debounce-and-dispatch [:new-chat/set-new-identity %] 600))
-                      :on-submit-editing
-                      #(when (= state :valid)
-                         (debounce/dispatch-and-chill [:contact.ui/contact-code-submitted true @entered-nickname] 3000))
-                      :placeholder         (i18n/label :t/enter-contact-code)
-                      :show-cancel         false
-                      :accessibility-label :enter-contact-code-input
-                      :auto-capitalize     :none
-                      :return-key-type     :go}]]
-                   [react/view {:justify-content :center
-                                :align-items     :center}
-                    [input-icon state true @entered-nickname]]]
-                  [react/view {:min-height 30 :justify-content :flex-end :margin-bottom 16}
-                   [quo/text {:style {:margin-horizontal 16}
-                              :size  :small
-                              :align :center
-                              :color :secondary}
-                    (cond (= state :error)
-                          (get-validation-label error)
-                          (= state :valid)
-                          (str (when ens-name (str ens-name " • "))
-                               (utils/get-shortened-address public-key))
-                          :else "")]]
-                  [react/text {:style {:margin-horizontal 16 :color colors/gray}}
-                   (i18n/label :t/nickname-description)]
-                  [react/view {:padding 16}
+    [react/view {:style {:flex 1}}
+     [topbar/topbar
+      {:title  (i18n/label :t/new-contact)
+       :modal? true
+       :right-accessories
+       [{:icon                :qr
+         :accessibility-label :scan-contact-code-button
+         :on-press            #(re-frame/dispatch [::qr-scanner/scan-code
+                                                   {:title        (i18n/label :t/new-contact)
+                                                    :handler      :contact/qr-code-scanned
+                                                    :new-contact? true}])}]}]
+     [react/view {:flex-direction :row
+                  :padding        16}
+      [react/view {:flex          1
+                   :padding-right 16}
+       [quo/text-input
+        {:on-change-text
+         #(do
+            (re-frame/dispatch [:set-in [:contacts/new-identity :state] :searching])
+            (debounce/debounce-and-dispatch [:new-chat/set-new-identity %] 600))
+         :on-submit-editing
+         #(when (= state :valid)
+            (debounce/dispatch-and-chill [:contact.ui/contact-code-submitted true @entered-nickname] 3000))
+         :placeholder         (i18n/label :t/enter-contact-code)
+         :show-cancel         false
+         :accessibility-label :enter-contact-code-input
+         :auto-capitalize     :none
+         :return-key-type     :go}]]
+      [react/view {:justify-content :center
+                   :align-items     :center}
+       [input-icon state true @entered-nickname]]]
+     [react/view {:min-height 30 :justify-content :flex-end :margin-bottom 16}
+      [quo/text {:style {:margin-horizontal 16}
+                 :size  :small
+                 :align :center
+                 :color :secondary}
+       (cond (= state :error)
+             (get-validation-label error)
+             (= state :valid)
+             (str (when ens-name (str ens-name " • "))
+                  (utils/get-shortened-address public-key))
+             :else "")]]
+     [react/text {:style {:margin-horizontal 16 :color colors/gray}}
+      (i18n/label :t/nickname-description)]
+     [react/view {:padding 16}
 
-                   [nickname-input entered-nickname]
-                   [react/text {:style {:align-self :flex-end :margin-top 16
-                                        :color      colors/gray}}
-                    (str (count @entered-nickname) " / 32")]]]))
+      [nickname-input entered-nickname]
+      [react/text {:style {:align-self :flex-end :margin-top 16
+                           :color      colors/gray}}
+       (str (count @entered-nickname) " / 32")]]]))

@@ -35,7 +35,6 @@
             [status-im.chat.models.link-preview :as link-preview]
             [status-im.utils.mobile-sync :as utils.mobile-sync]
             [status-im.async-storage.core :as async-storage]
-            [status-im.chat.models :as chat.models]
             [status-im.notifications-center.core :as notifications-center]))
 
 (re-frame/reg-fx

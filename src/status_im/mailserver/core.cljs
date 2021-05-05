@@ -6,7 +6,6 @@
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.i18n.i18n :as i18n]
             [status-im.mailserver.constants :as constants]
-            [status-im.multiaccounts.model :as multiaccounts.model]
             [status-im.multiaccounts.update.core :as multiaccounts.update]
             [status-im.native-module.core :as status]
             [status-im.node.core :as node]
@@ -16,7 +15,6 @@
             [status-im.utils.fx :as fx]
             [status-im.utils.handlers :as handlers]
             [status-im.utils.random :as rand]
-            [status-im.utils.utils :as utils]
             [taoensso.timbre :as log]))
 
 ;; How do mailserver work ?

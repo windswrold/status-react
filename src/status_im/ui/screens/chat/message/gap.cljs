@@ -17,22 +17,22 @@
                                 gap-ids
                                 chat-id]
                   connected?   [:mailserver/connected?]]
-                 [react/view {:style (style/gap-container)}
-                  [react/touchable-highlight
-                   {:on-press (when (and connected? (not in-progress?))
-                                (on-press chat-id gap-ids))
-                    :style    style/touchable}
-                   [react/view {:style style/label-container}
-                    (if in-progress?
-                      [react/activity-indicator]
-                      [react/nested-text
-                       {:style (style/gap-text connected?)}
-                       (i18n/label :t/fetch-messages)
-                       (when (= gap-ids #{:first-gap})
-                         [{:style style/date}
-                          (let [date (datetime/timestamp->long-date
-                                      (* 1000 (:from gap-parameters)))]
-                            (str
-                             "\n"
-                             (i18n/label :t/load-messages-before
-                                         {:date date})))])])]]]))
+    [react/view {:style (style/gap-container)}
+     [react/touchable-highlight
+      {:on-press (when (and connected? (not in-progress?))
+                   (on-press chat-id gap-ids))
+       :style    style/touchable}
+      [react/view {:style style/label-container}
+       (if in-progress?
+         [react/activity-indicator]
+         [react/nested-text
+          {:style (style/gap-text connected?)}
+          (i18n/label :t/fetch-messages)
+          (when (= gap-ids #{:first-gap})
+            [{:style style/date}
+             (let [date (datetime/timestamp->long-date
+                         (* 1000 (:from gap-parameters)))]
+               (str
+                "\n"
+                (i18n/label :t/load-messages-before
+                            {:date date})))])])]]]))

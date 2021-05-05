@@ -40,9 +40,9 @@
 
 (defn get-prices [from to mainnet? on-success on-error]
   (log/info "[prices] get-prices"
-             "from" from
-             "to" to
-             "mainnet?" mainnet?)
+            "from" from
+            "to" to
+            "mainnet?" mainnet?)
   (http/get
    (gen-price-url from to)
    (fn [resp] (on-success (format-price-resp resp mainnet?)))

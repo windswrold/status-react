@@ -4,10 +4,8 @@
             [status-im.multiaccounts.model :as multiaccounts.model]
             [status-im.chat.models.message-list :as message-list]
             [status-im.data-store.chats :as chats-store]
-            [status-im.data-store.messages :as messages-store]
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.i18n.i18n :as i18n]
-            [status-im.mailserver.core :as mailserver]
             [status-im.ui.components.colors :as colors]
             [status-im.constants :as constants]
             [status-im.navigation :as navigation]
@@ -16,7 +14,6 @@
             [status-im.utils.utils :as utils]
             [status-im.utils.types :as types]
             [status-im.add-new.db :as new-public-chat.db]
-            [status-im.mailserver.constants :as mailserver.constants]
             [status-im.chat.models.loading :as loading]
             [status-im.ui.screens.chat.state :as chat.state]))
 

@@ -3,7 +3,6 @@
             [status-im.i18n.i18n :as i18n]
             [status-im.mailserver.core :as mailserver]
             [status-im.multiaccounts.login.core :as login]
-            [status-im.multiaccounts.model :as multiaccounts.model]
             [status-im.transport.message.core :as transport.message]
             [status-im.notifications.local :as local-notifications]
             [status-im.chat.models.message :as models.message]

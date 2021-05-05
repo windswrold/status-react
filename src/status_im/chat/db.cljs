@@ -1,6 +1,4 @@
-(ns status-im.chat.db
-  (:require [clojure.string :as clojure.string]
-            [status-im.mailserver.constants :as mailserver.constants]))
+(ns status-im.chat.db)
 
 (defn group-chat-name
   [{:keys [public? name]}]
