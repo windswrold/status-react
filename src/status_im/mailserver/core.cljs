@@ -17,7 +17,6 @@
             [status-im.utils.handlers :as handlers]
             [status-im.utils.random :as rand]
             [status-im.utils.utils :as utils]
-            [status-im.mailserver.topics :as topics]
             [taoensso.timbre :as log]))
 
 ;; How do mailserver work ?
@@ -356,66 +355,12 @@
                "adjusted-from:" adjusted-from)
     adjusted-from))
 
-(defn- assoc-topic-chat [chat chats topic]
-  (assoc chats topic chat))
-
-(defn- reduce-assoc-topic-chat [db chats-map chat-id chat]
-  (let [assoc-topic-chat (partial assoc-topic-chat chat)
-        topics (topics/topics-for-chat db chat-id)]
-    (reduce assoc-topic-chat chats-map topics)))
-
 (fx/defn handle-request-success
   {:events [:mailserver.callback/request-success]}
   [{{:keys [chats] :as db} :db} {:keys [request-id topics]}]
   (when (:mailserver/current-request db)
     {:db (assoc-in db [:mailserver/current-request :request-id]
                    request-id)}))
-
-(defn request-messages!
-  [{:keys [sym-key-id address]}
-   {:keys [topics cursor to from force-to?] :as request}]
-  ;; Add some room to from, unless we break day boundaries so that
-  ;; messages that have been received after the last request are also fetched
-  (let [actual-from  (adjust-request-for-transit-time from)
-        actual-limit (or (:limit request)
-                         @limit)]
-    (log/info "mailserver: request-messages for: "
-              " topics " topics
-              " from " actual-from
-              " force-to? " force-to?
-              " to " to
-              " range " (- to from)
-              " cursor " cursor
-              " limit " actual-limit)
-    (json-rpc/call
-     {:method     (json-rpc/call-ext-method "requestMessages")
-      :params     [(cond-> {:topics         topics
-                            :mailServerPeer address
-                            :symKeyID       sym-key-id
-                            :timeout        constants/request-timeout
-                            :limit          actual-limit
-                            :cursor         cursor
-                            :from           actual-from}
-                     force-to?
-                     (assoc :to to))]
-      :on-success (fn [request-id]
-                    (log/info "mailserver: messages request success for topic "
-                              topics "from" from "to" to)
-                    (re-frame/dispatch
-                     [:mailserver.callback/request-success
-                      {:request-id request-id :topics topics}]))
-      :on-error   (fn [error]
-                    (log/error "mailserver: messages request error for topic "
-                               topics ": " error)
-                    (utils/set-timeout
-                     #(re-frame/dispatch
-                       [:mailserver.callback/resend-request {:request-id nil}])
-                     constants/backoff-interval-ms))})))
-
-(re-frame/reg-fx
- :mailserver/request-messages
- (fn [{:keys [mailserver request]}]
-   (request-messages! mailserver request)))
 
 (defn get-mailserver-when-ready
   "return the mailserver if the mailserver is ready"
@@ -598,13 +543,6 @@
   [{:keys [db]}]
   {:db (dissoc db :mailserver/request-to)})
 
-(defn update-mailserver-topic
-  [{:keys [last-request] :as config}
-   {:keys [request-to]}]
-  (cond-> config
-    (> request-to last-request)
-    (assoc :last-request request-to)))
-
 (defn check-existing-gaps
   [chat-id chat-gaps request]
   (let [request-from (:from request)
@@ -753,64 +691,6 @@
                    gaps)])))
    chat-ids))
 
-(defn get-updated-mailserver-topics [db requested-topics from to]
-  (into
-   {}
-   (keep (fn [topic]
-           (when-let [config (get-in db [:mailserver/topics topic])]
-             [topic (update-mailserver-topic config
-                                             {:request-from from
-                                              :request-to   to})])))
-   requested-topics))
-
-(fx/defn update-mailserver-topics
-  "TODO: add support for cursors
-  if there is a cursor, do not update `last-request`"
-  [{:keys [db now] :as cofx} {:keys [request-id cursor]}]
-  (when-let [request (get db :mailserver/current-request)]
-    (let [{:keys [from to topics]} request
-          mailserver-topics (get-updated-mailserver-topics db topics from to)]
-      (log/info "mailserver: message request " request-id
-                "completed for mailserver topics" topics "from" from "to" to)
-      (if (empty? mailserver-topics)
-        ;; when topics were deleted (filter was removed while request was pending)
-        (fx/merge cofx
-                  {:db (dissoc db :mailserver/current-request)}
-                  (process-next-messages-request))
-        ;; If a cursor is returned, add cursor and fire request again
-        (if (seq cursor)
-          (when-let [mailserver (get-mailserver-when-ready cofx)]
-            (let [request-with-cursor (assoc request :cursor cursor)]
-              {:db (assoc db :mailserver/current-request request-with-cursor)
-               :mailserver/request-messages {:mailserver mailserver
-                                             :request    request-with-cursor}}))
-          (let [{:keys [gap chat-id]} request]
-            (fx/merge
-             cofx
-             {:db (-> db
-                      (dissoc :mailserver/current-request)
-                      (update :mailserver/requests-from
-                              #(apply dissoc % topics))
-                      (update :mailserver/requests-to
-                              #(apply dissoc % topics))
-                      (update :mailserver/topics merge mailserver-topics)
-                      (update :mailserver/fetching-gaps-in-progress
-                              (fn [gaps]
-                                (if gap
-                                  (update gaps chat-id dissoc gap)
-                                  gaps)))
-                      (update :mailserver/planned-gap-requests
-                              dissoc gap))
-              ::json-rpc/call
-              [{:method "mailservers_addMailserverTopics"
-                :params [(mapv (fn [[topic mailserver-topic]]
-                                 (assoc mailserver-topic :topic topic)) mailserver-topics)]
-                :on-success
-                #(log/debug "added mailserver-topic successfully")
-                :on-failure
-                #(log/error "failed to add mailserver topic" %)}]}
-             (process-next-messages-request))))))))
-
 (fx/defn retry-next-messages-request
   {:events [:mailserver.ui/retry-request-pressed]}
   [{:keys [db] :as cofx}]
@@ -828,14 +708,6 @@
            (dissoc :mailserver/current-request
                    :mailserver/pending-requests))})
 
-(fx/defn handle-request-completed
-  [{{:keys [chats]} :db :as cofx}
-   {:keys [requestID lastEnvelopeHash cursor errorMessage]}]
-  (when (multiaccounts.model/logged-in? cofx)
-    (if (empty? errorMessage)
-      {:mailserver/increase-limit []}
-      (handle-request-error cofx errorMessage))))
-
 (fx/defn show-request-error-popup
   {:events [:mailserver.ui/request-error-pressed]}
   [{:keys [db]}]
@@ -846,81 +718,6 @@
                            {:error mailserver-error})
       :on-accept #(re-frame/dispatch [:mailserver.ui/retry-request-pressed])
       :confirm-button-text (i18n/label :t/mailserver-request-retry)}}))
-
-(fx/defn fill-the-gap
-  [{:keys [db] :as cofx} {:keys [gaps topics chat-id]}]
-  (let [mailserver      (get-mailserver-when-ready cofx)
-        requests        (into {}
-                              (map
-                               (fn [{:keys [from to id]}]
-                                 [id
-                                  {:from       (max from
-                                                    (- to constants/max-request-range))
-                                   :to         to
-                                   :force-to?  true
-                                   :topics     topics
-                                   :gap-topics topics
-                                   :chat-id    chat-id
-                                   :gap        id}]))
-                              gaps)
-        first-request   (val (first requests))
-        current-request (:mailserver/current-request db)]
-    (cond-> {:db (-> db
-                     (assoc :mailserver/planned-gap-requests requests)
-                     (update :mailserver/fetching-gaps-in-progress
-                             assoc chat-id requests))}
-      (not current-request)
-      (-> (assoc-in [:db :mailserver/current-request] first-request)
-          (assoc :mailserver/request-messages
-                 {:mailserver mailserver
-                  :request    first-request})))))
-
-(fx/defn resend-request
-  {:events [:mailserver.callback/resend-request]}
-  [{:keys [db] :as cofx} {:keys [request-id]}]
-  (let [current-request (:mailserver/current-request db)
-        gap-request?    (executing-gap-request? db)]
-    ;; no inflight request, do nothing
-    (when (and current-request
-               ;; the request was never successful
-               (or (nil? request-id)
-                   ;; we haven't received the request-id yet, but has expired,
-                   ;; so we retry even though we are not sure it's the current
-                   ;; request that failed
-                   (nil? (:request-id current-request))
-                   ;; this is the same request that we are currently processing
-                   (= request-id (:request-id current-request))))
-
-      (if            (<= constants/maximum-number-of-attempts
-                         (:attempts current-request))
-        (fx/merge cofx
-                  {:db (update db :mailserver/current-request dissoc :attempts)}
-                  (log-mailserver-failure)
-                  (change-mailserver))
-        (let [mailserver (get-mailserver-when-ready cofx)
-              offline?   (= :offline (:network-status db))]
-          (cond
-            (and gap-request? offline?)
-            {:db (-> db
-                     (dissoc :mailserver/current-request)
-                     (update :mailserver/fetching-gaps-in-progress
-                             dissoc (:chat-id current-request))
-                     (dissoc :mailserver/planned-gap-requests))}
-
-            mailserver
-            (let [{:keys [topics from to cursor limit] :as request}
-                  current-request]
-              (log/info "mailserver: message request " request-id
-                        "expired for mailserver topic" topics "from" from
-                        "to" to "cursor" cursor "limit" (decrease-limit))
-              {:db                        (update-in db [:mailserver/current-request :attempts] inc)
-               :mailserver/decrease-limit []
-               :mailserver/request-messages
-               {:mailserver mailserver
-                :request    (assoc request :limit (decrease-limit))}})
-
-            :else
-            {:mailserver/decrease-limit []}))))))
 
 (fx/defn initialize-mailserver
   [cofx]

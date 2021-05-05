@@ -16,7 +16,6 @@
             [status-im.utils.utils :as utils]
             [status-im.utils.types :as types]
             [status-im.add-new.db :as new-public-chat.db]
-            [status-im.mailserver.topics :as mailserver.topics]
             [status-im.mailserver.constants :as mailserver.constants]
             [status-im.chat.models.loading :as loading]
             [status-im.ui.screens.chat.state :as chat.state]))
