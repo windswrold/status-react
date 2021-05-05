@@ -41,6 +41,7 @@
    "wakuxet_syncChatFromSyncedFrom" {}
    "wakuext_syncChatFromSyncedFrom" {}
    "wakuext_createPublicChat" {}
+   "wakuext_createOneToOneChat" {}
    "wakuext_createProfileChat" {}
    "wakuext_startMessenger" {}
    "wakuext_sendPairInstallation" {}
@@ -82,6 +83,7 @@
    "wakuext_muteChat" {}
    "wakuext_unmuteChat" {}
    "wakuext_contacts" {}
+   "wakuext_removeContact" {}
    "wakuext_prepareContent" {}
    "wakuext_blockContact" {}
    "wakuext_updateMailservers" {}

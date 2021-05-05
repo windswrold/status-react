@@ -96,10 +96,11 @@
   (let [new-contact (update contact
                             :system-tags
                             (fnil #(disj % :contact/added) #{}))]
-    (fx/merge cofx
-              {:db (assoc-in db [:contacts/contacts public-key] new-contact)
-               :dispatch [:offload-messages constants/timeline-chat-id]}
-              (contacts-store/save-contact new-contact nil))))
+    {:db (assoc-in db [:contacts/contacts public-key] new-contact)
+     ::json-rpc/call [{:method "wakuext_removeContact"
+                       :params [public-key]
+                       :on-success #(log/debug "contact removed successfully")}]
+     :dispatch [:offload-messages constants/timeline-chat-id]}))
 
 (fx/defn create-contact
   "Create entry in contacts"

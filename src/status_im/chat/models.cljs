@@ -232,10 +232,10 @@
   [{:keys [db] :as cofx} chat-id]
   ;; don't allow to open chat with yourself
   (when (not= (multiaccounts.model/current-public-key cofx) chat-id)
-    {::json-rpc [{:method "wakuext_createOneToOneChat"
-                  :params [{:ID chat-id}]
-                  :on-success #(re-frame/dispatch [::one-to-one-chat-created chat-id %])
-                  :on-error #(log/error "failed to create one-to-on chat" chat-id %)}]}))
+    {::json-rpc/call [{:method "wakuext_createOneToOneChat"
+                       :params [{:ID chat-id}]
+                       :on-success #(re-frame/dispatch [::one-to-one-chat-created chat-id %])
+                       :on-error #(log/error "failed to create one-to-on chat" chat-id %)}]}))
 
 (defn profile-chat-topic [public-key]
   (str "@" public-key))

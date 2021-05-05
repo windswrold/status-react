@@ -951,14 +951,18 @@
    [(atom chat-id)
     (re-frame/subscribe [:chats/message-list chat-id])
     (re-frame/subscribe [:chats/chat-messages chat-id])
+    (re-frame/subscribe [:chats/loading-messages? chat-id])
     (re-frame/subscribe [:chats/synced-from chat-id])])
- (fn [[chat-id message-list messages synced-from]]
+ (fn [[chat-id message-list messages loading-messages? synced-from]]
    ;;TODO (perf)
-   (println "SYNCED FROM" synced-from)
-   (-> (models.message-list/->seq message-list)
-       (chat.db/add-datemarks)
-       (hydrate-messages messages)
-       (chat.db/collapse-gaps chat-id synced-from))))
+   (let [message-list-seq (models.message-list/->seq message-list)]
+     ; Don't show gaps if that's the case as we are still loading messages
+     (if (and (empty? message-list-seq) loading-messages?)
+       []
+       (-> message-list-seq
+           (chat.db/add-datemarks)
+           (hydrate-messages messages)
+           (chat.db/collapse-gaps chat-id synced-from))))))
 
 ;;we want to keep data unchanged so react doesn't change component when we leave screen
 (def memo-chat-messages-stream (atom nil))
