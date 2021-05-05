@@ -764,12 +764,12 @@
    (get chats chat-id)))
 
 (re-frame/reg-sub
- :chats/synced-to
+ :chats/synced-from
  (fn [[_ chat-id] _]
    (re-frame/subscribe [:chat-by-id chat-id]))
- (fn [{:keys [synced-to] :as chat}]
-   (println "CHAT2" synced-to "SYNCED" chat)
-   synced-to))
+ (fn [{:keys [synced-from] :as chat}]
+   (println "CHAT2" synced-from "SYNCED" chat)
+   synced-from))
 
 (re-frame/reg-sub
  :chats/current-raw-chat
@@ -834,7 +834,7 @@
  :chats/current-chat-chat-view
  :<- [:chats/current-chat]
  (fn [current-chat]
-   (select-keys current-chat [:chat-id :show-input? :group-chat :admins :invitation-admin :public? :chat-type :color :chat-name :synced-to])))
+   (select-keys current-chat [:chat-id :show-input? :group-chat :admins :invitation-admin :public? :chat-type :color :chat-name :synced-to :synced-from])))
 
 (re-frame/reg-sub
  :current-chat/metadata
@@ -948,16 +948,17 @@
 (re-frame/reg-sub
  :chats/raw-chat-messages-stream
  (fn [[_ chat-id] _]
-   [(re-frame/subscribe [:chats/message-list chat-id])
+   [(atom chat-id)
+    (re-frame/subscribe [:chats/message-list chat-id])
     (re-frame/subscribe [:chats/chat-messages chat-id])
-    (re-frame/subscribe [:chats/synced-to chat-id])])
- (fn [[message-list messages synced-to]]
+    (re-frame/subscribe [:chats/synced-from chat-id])])
+ (fn [[chat-id message-list messages synced-from]]
    ;;TODO (perf)
-   (println "SYNCED TO" synced-to)
+   (println "SYNCED FROM" synced-from)
    (-> (models.message-list/->seq message-list)
        (chat.db/add-datemarks)
        (hydrate-messages messages)
-       (chat.db/collapse-gaps synced-to))))
+       (chat.db/collapse-gaps chat-id synced-from))))
 
 ;;we want to keep data unchanged so react doesn't change component when we leave screen
 (def memo-chat-messages-stream (atom nil))

@@ -51,13 +51,13 @@
 (def map->sorted-seq
   (comp (partial map second) (partial sort-by first)))
 
-(defn collapse-gaps [messages synced-to]
+(defn collapse-gaps [messages chat-id synced-from]
   (let [messages-with-gaps (reduce
                             (fn [acc {:keys [gap-parameters message-id] :as message}]
                               (let [last-element (peek acc)]
                                 (cond
-                                 ;; If it's the first element or not a gap, just add
-                                  (or (nil? last-element) (empty? gap-parameters))
+                                 ;; If it's a message, just add
+                                  (empty? gap-parameters)
                                   (conj acc message)
 
                                  ;; Both are gaps, merge them
@@ -72,11 +72,12 @@
                             []
                             messages)]
     ;; If it's a gap or the chat is still syncing, do nothing
-    (if (or (nil? synced-to)
+    (if (or (nil? synced-from)
             (:gap-ids (peek messages-with-gaps)))
       messages-with-gaps
       (conj messages-with-gaps {:message-id "0x123"
                                 :message-type 6
+                                :chat-id chat-id
                                 :content-type 10
                                 :gap-ids #{:first-gap}
-                                :gap-parameters {:from synced-to}}))))
+                                :gap-parameters {:from synced-from}}))))

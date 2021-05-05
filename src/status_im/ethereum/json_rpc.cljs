@@ -38,6 +38,7 @@
    "wakuext_post" {}
    "wakuext_requestAllHistoricMessages" {}
    "wakuext_fillGaps" {}
+   "wakuxet_syncChatFromSyncedFrom" {}
    "wakuext_syncChatFromSyncedFrom" {}
    "wakuext_createPublicChat" {}
    "wakuext_createProfileChat" {}

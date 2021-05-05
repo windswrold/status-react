@@ -361,6 +361,21 @@
   (log/error "failed to fetch gaps" chat-id gap-ids error)
   {:db (dissoc db :mailserver/fetching-gaps-in-progress)})
 
+(fx/defn sync-chat-from-sync-from-failed
+  {:events [::sync-chat-from-sync-from-failed]}
+  [{:keys [db]} chat-id error]
+  (log/error "failed to sync chat" chat-id error)
+  {:db (dissoc db :mailserver/fetching-gaps-in-progress)})
+
+(fx/defn sync-chat-from-sync-from-success
+  {:events [::sync-chat-from-sync-from-success]}
+  [{:keys [db] :as cofx} chat-id synced-from]
+  (log/debug "synced success" chat-id synced-from)
+  {:db
+   (-> db
+       (assoc-in [:chats chat-id :synced-from] synced-from)
+       (dissoc :mailserver/fetching-gaps-in-progress))})
+
 (fx/defn gaps-filled
   {:events [::gaps-filled]}
   [{:keys [db] :as cofx} chat-id message-ids]
@@ -371,30 +386,30 @@
             (dissoc :mailserver/fetching-gaps-in-progress))}
    (message-list/rebuild-message-list chat-id)))
 
-(fx/defn chat-ui-fill-gaps
-  {:events [:chat.ui/fill-gaps]}
-  [{:keys [db] :as cofx} chat-id gap-ids]
-  {:db (assoc db :mailserver/fetching-gaps-in-progress gap-ids)
-   ::json-rpc/call [{:method "wakuext_fillGaps"
+(fx/defn fill-gaps
+  [cofx chat-id gap-ids]
+  {::json-rpc/call [{:method "wakuext_fillGaps"
                      :params [chat-id gap-ids]
                      :on-success #(re-frame/dispatch [::gaps-filled chat-id gap-ids %])
                      :on-error #(re-frame/dispatch [::gaps-failed chat-id gap-ids %])}]})
 
-(fx/defn chat-ui-fetch-more
-  {:events [:chat.ui/fetch-more]}
-  [{:keys [db] :as cofx} chat-id]
-  (let [{:keys [lowest-request-from]}
-        (get-in db [:mailserver/ranges chat-id])
+(fx/defn sync-chat-from-sync-from
+  [cofx chat-id]
+  (log/debug "syncing chat from sync from")
+  {::json-rpc/call [{:method "wakuext_syncChatFromSyncedFrom"
+                     :params [chat-id]
+                     :on-success #(re-frame/dispatch [::sync-chat-from-sync-from-success chat-id %])
+                     :on-error #(re-frame/dispatch [::sync-chat-from-sync-from-failed chat-id %])}]})
 
-        topics  (mailserver.topics/topics-for-chat db chat-id)
-        gaps    [{:id   :first-gap
-                  :to   lowest-request-from
-                  :from (- lowest-request-from mailserver.constants/one-day)}]]
-    (mailserver/fill-the-gap
-     cofx
-     {:gaps    gaps
-      :topics  topics
-      :chat-id chat-id})))
+(fx/defn chat-ui-fill-gaps
+  {:events [:chat.ui/fill-gaps]}
+  [{:keys [db] :as cofx} chat-id gap-ids]
+  (log/info "filling gaps" chat-id gap-ids)
+  (fx/merge cofx
+            {:db (assoc db :mailserver/fetching-gaps-in-progress gap-ids)}
+            (if (= gap-ids #{:first-gap})
+              (sync-chat-from-sync-from chat-id)
+              (fill-gaps chat-id gap-ids))))
 
 (fx/defn chat-ui-remove-chat-pressed
   {:events [:chat.ui/remove-chat-pressed]}
