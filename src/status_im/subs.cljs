@@ -136,8 +136,6 @@
 (reg-root-key-sub :mailserver/pending-requests :mailserver/pending-requests)
 (reg-root-key-sub :mailserver/request-error? :mailserver/request-error)
 (reg-root-key-sub :mailserver/fetching-gaps-in-progress :mailserver/fetching-gaps-in-progress)
-(reg-root-key-sub :mailserver/gaps :mailserver/gaps)
-(reg-root-key-sub :mailserver/ranges :mailserver/ranges)
 
 ;;contacts
 (reg-root-key-sub ::contacts :contacts/contacts)
@@ -767,9 +765,15 @@
  :chats/synced-from
  (fn [[_ chat-id] _]
    (re-frame/subscribe [:chat-by-id chat-id]))
- (fn [{:keys [synced-from] :as chat}]
-   (println "CHAT2" synced-from "SYNCED" chat)
+ (fn [{:keys [synced-from]}]
    synced-from))
+
+(re-frame/reg-sub
+ :chats/synced-to-and-from
+ (fn [[_ chat-id] _]
+   (re-frame/subscribe [:chat-by-id chat-id]))
+ (fn [chat]
+   (select-keys chat [:synced-to :synced-from])))
 
 (re-frame/reg-sub
  :chats/current-raw-chat
@@ -878,24 +882,6 @@
    (models.reactions/message-reactions
     current-public-key
     (get-in reactions [chat-id message-id]))))
-
-(re-frame/reg-sub
- :chats/messages-gaps
- :<- [:mailserver/gaps]
- (fn [gaps [_ chat-id]]
-   (sort-by :from (vals (get gaps chat-id)))))
-
-(re-frame/reg-sub
- :mailserver/ranges-by-chat-id
- :<- [:mailserver/ranges]
- (fn [ranges [_ chat-id]]
-   (get ranges chat-id)))
-
-(re-frame/reg-sub
- :chats/range
- :<- [:mailserver/ranges]
- (fn [ranges [_ chat-id]]
-   (get ranges chat-id)))
 
 (re-frame/reg-sub
  :mailserver/current-name

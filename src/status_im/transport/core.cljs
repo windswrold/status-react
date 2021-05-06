@@ -48,27 +48,6 @@
           db
           custom-mailservers))
 
-(defn add-mailserver-topics
-  [db mailserver-topics]
-  (assoc db
-         :mailserver/topics
-         (reduce (fn [acc {:keys [topic]
-                           :as mailserver-topic}]
-                   (assoc acc topic
-                          (update mailserver-topic :chat-ids
-                                  #(into #{} %))))
-                 {}
-                 mailserver-topics)))
-
-(defn add-mailserver-ranges
-  [db mailserver-ranges]
-  (assoc db
-         :mailserver/ranges
-         (reduce (fn [acc {:keys [chat-id] :as range}]
-                   (assoc acc chat-id range))
-                 {}
-                 mailserver-ranges)))
-
 (fx/defn start-messenger
   "We should only start receiving messages/processing topics once all the
   initializiation is completed, otherwise we might receive messages/topics

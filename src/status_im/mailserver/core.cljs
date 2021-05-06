@@ -14,7 +14,6 @@
             [status-im.utils.config :as config]
             [status-im.utils.fx :as fx]
             [status-im.utils.handlers :as handlers]
-            [status-im.utils.random :as rand]
             [taoensso.timbre :as log]))
 
 ;; How do mailserver work ?
@@ -619,74 +618,6 @@
         (seq deleted-gaps)
         (assoc-in [:deleted-gaps chat-id] deleted-gaps))))
    {}
-   chat-ids))
-
-(fx/defn update-ranges
-  [{:keys [db] :as cofx}]
-  (let [{:keys [topics from to]}
-        (get db :mailserver/current-request)
-        chat-ids       (mapcat
-                        :chat-ids
-                        (-> (:mailserver/topics db)
-                            (select-keys topics)
-                            vals))
-        ranges         (:mailserver/ranges db)
-        updated-ranges (into
-                        {}
-                        (keep
-                         (fn [chat-id]
-                           (let [chat-id (str chat-id)
-                                 {:keys [lowest-request-from
-                                         highest-request-to]
-                                  :as   range}
-                                 (get ranges chat-id)]
-                             [chat-id
-                              (cond-> (assoc range :chat-id chat-id)
-                                (or (nil? highest-request-to)
-                                    (> to highest-request-to))
-                                (assoc :highest-request-to to)
-
-                                (or (nil? lowest-request-from)
-                                    (< from lowest-request-from))
-                                (assoc :lowest-request-from from))])))
-                        chat-ids)]
-    (fx/merge cofx
-              {:db (update db :mailserver/ranges merge updated-ranges)
-               ::json-rpc/call
-               [{:method "mailservers_addChatRequestRanges"
-                 :params [(vals updated-ranges)]
-                 :on-success #()
-                 :on-failure
-                 #(log/error "failed to save chat request range" %)}]})))
-
-(defn prepare-new-gaps [new-gaps ranges {:keys [from to]} chat-ids]
-  (into
-   {}
-   (comp
-    (map (fn [chat-id]
-           (let [gaps (get new-gaps chat-id)
-                 {:keys [highest-request-to lowest-request-from]}
-                 (get ranges chat-id)]
-             [chat-id (cond-> gaps
-                        (and
-                         (not (nil? highest-request-to))
-                         (< highest-request-to from))
-                        (conj {:chat-id chat-id
-                               :from    highest-request-to
-                               :to      from})
-                        (and
-                         (not (nil? lowest-request-from))
-                         (< to lowest-request-from))
-                        (conj {:chat-id chat-id
-                               :from    to
-                               :to      lowest-request-from}))])))
-    (keep (fn [[chat-id gaps]]
-            [chat-id
-             (into {}
-                   (map (fn [gap]
-                          (let [id (rand/guid)]
-                            [id (assoc gap :id id)])))
-                   gaps)])))
    chat-ids))
 
 (fx/defn retry-next-messages-request
