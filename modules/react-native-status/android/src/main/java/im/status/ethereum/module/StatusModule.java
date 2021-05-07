@@ -1282,7 +1282,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
         StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
+    @ReactMethod
     public String generateAlias(final String seed) {
         return Statusgo.generateAlias(seed);
     }
@@ -1308,7 +1308,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
         StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
+    @ReactMethod
     public String identicon(final String seed) {
         return Statusgo.identicon(seed);
     }

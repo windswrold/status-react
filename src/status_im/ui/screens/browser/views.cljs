@@ -65,49 +65,49 @@
 
 (views/defview navigation [{:keys [url can-go-back? can-go-forward? dapps-account empty-tab browser-id name]}]
   (views/letsubs [accounts [:accounts-without-watch-only]]
-    [react/view (styles/navbar)
-     [react/touchable-highlight {:on-press            #(if can-go-back?
-                                                         (re-frame/dispatch [:browser.ui/previous-page-button-pressed])
-                                                         (do
-                                                           (re-frame/dispatch [:browser.ui/remove-browser-pressed browser-id])
-                                                           (re-frame/dispatch [:browser.ui/open-empty-tab])))
-                                 :disabled            empty-tab
-                                 :style               (when empty-tab styles/disabled-button)
-                                 :accessibility-label :previous-page-button}
-      [react/view
-       [icons/icon :main-icons/arrow-left]]]
-     [react/touchable-highlight {:on-press            #(re-frame/dispatch [:browser.ui/next-page-button-pressed])
-                                 :disabled            (not can-go-forward?)
-                                 :style               (when-not can-go-forward? styles/disabled-button)
-                                 :accessibility-label :next-page-button}
-      [react/view
-       [icons/icon :main-icons/arrow-right]]]
-     [react/touchable-highlight
-      {:accessibility-label :select-account
-       :on-press            #(re-frame/dispatch [:bottom-sheet/show-sheet
-                                                 {:content (accounts/accounts-list accounts dapps-account)}])}
-      [chat-icon/custom-icon-view-list (:name dapps-account) (:color dapps-account) 32]]
+                 [react/view (styles/navbar)
+                  [react/touchable-highlight {:on-press            #(if can-go-back?
+                                                                      (re-frame/dispatch [:browser.ui/previous-page-button-pressed])
+                                                                      (do
+                                                                        (re-frame/dispatch [:browser.ui/remove-browser-pressed browser-id])
+                                                                        (re-frame/dispatch [:browser.ui/open-empty-tab])))
+                                              :disabled            empty-tab
+                                              :style               (when empty-tab styles/disabled-button)
+                                              :accessibility-label :previous-page-button}
+                   [react/view
+                    [icons/icon :main-icons/arrow-left]]]
+                  [react/touchable-highlight {:on-press            #(re-frame/dispatch [:browser.ui/next-page-button-pressed])
+                                              :disabled            (not can-go-forward?)
+                                              :style               (when-not can-go-forward? styles/disabled-button)
+                                              :accessibility-label :next-page-button}
+                   [react/view
+                    [icons/icon :main-icons/arrow-right]]]
+                  [react/touchable-highlight
+                   {:accessibility-label :select-account
+                    :on-press            #(re-frame/dispatch [:bottom-sheet/show-sheet
+                                                              {:content (accounts/accounts-list accounts dapps-account)}])}
+                   [chat-icon/custom-icon-view-list (:name dapps-account) (:color dapps-account) 32]]
 
-     [react/touchable-highlight
-      {:on-press #(do
-                    (when empty-tab
-                      (re-frame/dispatch [:navigate-to :browser]))
-                    (re-frame/dispatch [:navigate-to :browser-tabs]))
-       :accessibility-label :browser-open-tabs}
-      [icons/icon :main-icons/tabs]]
+                  [react/touchable-highlight
+                   {:on-press #(do
+                                 (when empty-tab
+                                   (re-frame/dispatch [:navigate-to :browser]))
+                                 (re-frame/dispatch [:navigate-to :browser-tabs]))
+                    :accessibility-label :browser-open-tabs}
+                   [icons/icon :main-icons/tabs]]
 
-     [react/touchable-highlight
-      {:on-press #(when-not empty-tab
-                    (re-frame/dispatch
-                     [:bottom-sheet/show-sheet
-                      {:content (options/browser-options
-                                 url
-                                 dapps-account
-                                 empty-tab
-                                 name)}]))
-       :style               (when empty-tab styles/disabled-button)
-       :accessibility-label :browser-options}
-      [icons/icon :main-icons/more]]]))
+                  [react/touchable-highlight
+                   {:on-press #(when-not empty-tab
+                                 (re-frame/dispatch
+                                  [:bottom-sheet/show-sheet
+                                   {:content (options/browser-options
+                                              url
+                                              dapps-account
+                                              empty-tab
+                                              name)}]))
+                    :style               (when empty-tab styles/disabled-button)
+                    :accessibility-label :browser-options}
+                   [icons/icon :main-icons/more]]]))
 
 (def resources-to-permissions-map {"android.webkit.resource.VIDEO_CAPTURE" :camera
                                    "android.webkit.resource.AUDIO_CAPTURE" :record-audio})
@@ -168,6 +168,7 @@
   [{:keys [error? url browser-id unsafe? can-go-back? ignore-unsafe
            can-go-forward? resolving? network-id url-original dapp? dapp
            show-permission show-tooltip name dapps-account resources-permission?]}]
+  (println "NETWORK-ID" network-id)
   {:should-component-update (fn [_ _ args]
                               (let [[_ props] args]
                                 (not (nil? (:url props)))))}
@@ -222,29 +223,29 @@
                   dapps-account [:dapps-account]
                   network-id [:chain-id]
                   {:keys [webview-allow-permission-requests?]} [:multiaccount]]
-    (let [can-go-back?    (browser/can-go-back? browser)
-          can-go-forward? (browser/can-go-forward? browser)
-          url-original    (browser/get-current-url browser)]
-      [react/view {:style styles/browser}
-       [toolbar-content url url-original secure? url-editing? unsafe?]
-       [components/separator-dark]
-       [react/view
-        (when loading?
-          [connectivity/loading-indicator-anim window-width])]
-       [browser-component {:dapp?                 dapp?
-                           :dapp                  dapp
-                           :error?                error?
-                           :url                   url
-                           :url-original          url-original
-                           :browser-id            browser-id
-                           :unsafe?               unsafe?
-                           :ignore-unsafe         ignore-unsafe
-                           :can-go-back?          can-go-back?
-                           :can-go-forward?       can-go-forward?
-                           :resolving?            resolving?
-                           :network-id            network-id
-                           :show-permission       show-permission
-                           :show-tooltip          show-tooltip
-                           :name                  name
-                           :dapps-account         dapps-account
-                           :resources-permission? webview-allow-permission-requests?}]])))
+                 (let [can-go-back?    (browser/can-go-back? browser)
+                       can-go-forward? (browser/can-go-forward? browser)
+                       url-original    (browser/get-current-url browser)]
+                   [react/view {:style styles/browser}
+                    [toolbar-content url url-original secure? url-editing? unsafe?]
+                    [components/separator-dark]
+                    [react/view
+                     (when loading?
+                       [connectivity/loading-indicator-anim window-width])]
+                    [browser-component {:dapp?                 dapp?
+                                        :dapp                  dapp
+                                        :error?                error?
+                                        :url                   url
+                                        :url-original          url-original
+                                        :browser-id            browser-id
+                                        :unsafe?               unsafe?
+                                        :ignore-unsafe         ignore-unsafe
+                                        :can-go-back?          can-go-back?
+                                        :can-go-forward?       can-go-forward?
+                                        :resolving?            resolving?
+                                        :network-id            network-id
+                                        :show-permission       show-permission
+                                        :show-tooltip          show-tooltip
+                                        :name                  name
+                                        :dapps-account         dapps-account
+                                        :resources-permission? webview-allow-permission-requests?}]])))

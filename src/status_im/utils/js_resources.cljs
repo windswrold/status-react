@@ -7,3 +7,5 @@
   (str "window.statusAppNetworkId = \"" network-id "\";"
        (when config/debug-webview? "window.statusAppDebug = true;")
        provider-file))
+
+(def a 3)

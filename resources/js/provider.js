@@ -76,6 +76,7 @@
         data = JSON.parse(message);
         var id = data.messageId;
         var callback = callbacks[id];
+        console.log("RESPONSE", message)
 
         if (callback) {
             if (data.type === "api-response") {
@@ -156,13 +157,27 @@
     EthereumProvider.prototype._events = {};
 
     EthereumProvider.prototype.on = function(name, listener) {
+      console.log("ON", name)
         if (!this._events[name]) {
           this._events[name] = [];
         }
         this._events[name].push(listener);
     }
 
-    EthereumProvider.prototype.removeListener = function (name, listenerToRemove) {
+    EthereumProvider.prototype.addListener = EthereumProvider.prototype.on;
+
+    EthereumProvider.prototype.once = function (name, callback) {
+      console.log("ONCE", name)
+      this.on(name, callback);
+      this.on(name, remove);
+      function remove() {
+        this.off(name, callback);
+        this.off(name, remove);
+      }
+    };
+
+    EthereumProvider.prototype.off = function (name, listenerToRemove) {
+        console.log("OFF", name)
         if (!this._events[name]) {
           return
         }
@@ -171,12 +186,16 @@
         this._events[name] = this._events[name].filter(filterListeners);
     }
 
+
+    EthereumProvider.prototype.removeListener = EthereumProvider.prototype.off;
+
     EthereumProvider.prototype.emit = function (name, data) {
         if (!this._events[name]) {
           return
         }
         this._events[name].forEach(cb => cb(data));
     }
+
     EthereumProvider.prototype.enable = function () {
         if (window.statusAppDebug) { console.log("enable"); }
         return sendAPIrequest('web3');
@@ -234,7 +253,7 @@
     // (DEPRECATED) Support for legacy send method
     EthereumProvider.prototype.send = function (method, params = [])
     {
-        if (window.statusAppDebug) { console.log("send (legacy): " + method);}
+        if (window.statusAppDebug) { console.log("send 2 (legacy): " + method);}
         return this.request({method: method, params: params});
     }
 
