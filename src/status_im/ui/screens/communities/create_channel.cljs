@@ -26,7 +26,7 @@
                           :padding-top        10
                           :padding-horizontal 16}}
          [rn/view
-          [create/countable-label {:label      (i18n/label :t/give-a-short-description-community)
+          [create/countable-label {:label      (i18n/label :t/name)
                                    :text       @channel-name
                                    :max-length create/max-name-length}]
           [quo/text-input
@@ -35,20 +35,20 @@
             :auto-focus     true}]]
          [quo/separator {:style {:margin-vertical 10}}]
          [rn/view 
-          [create/countable-label {:label      (i18n/label :t/give-a-short-description-community)
+          [create/countable-label {:label      (i18n/label :t/description)
                             :text      @channel-description
                             :max-length create/max-description-length}]
           [quo/text-input
            {:placeholder    (i18n/label :t/give-a-short-description-community)
             :multiline      true
             :default-value  @channel-description
-            :on-change-text #(>evt [::communities/create-field :description %])}]]]]
+            :on-change-text #(reset! channel-description %)}]]]]
        [toolbar/toolbar
         {:show-border? true
          :center
          [quo/button {:disabled (not (valid? @channel-name))
                       :type     :secondary
                       :on-press #(debounce/dispatch-and-chill
-                                  [::communities/create-channel-confirmation-pressed @channel-name]
+                                  [::communities/create-channel-confirmation-pressed @channel-name @channel-description]
                                   3000)}
           (i18n/label :t/create)]}]])))

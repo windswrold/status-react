@@ -54,8 +54,7 @@
      :component members/members-container}
     {:name      :community-requests-to-join
      :component requests-to-join/requests-to-join-container}
-    {:name      :create-community-channel
-     :component create-channel/create-channel}]])
+    ]])
 
 (defn communities []
   [communities-stack {:header-mode :none}
@@ -79,7 +78,11 @@
      {:name      :community-membership
       :insets    {:bottom true
                   :top    false}
-      :component membership/membership}])])
+      :component membership/membership}
+     {:name      :create-community-channel
+      :insets    {:bottom true
+                  :top    false}
+      :component create-channel/create-channel}])])
 
 (defn new-group-chat []
   [group-stack {:header-mode        :none

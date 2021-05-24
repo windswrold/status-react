@@ -292,7 +292,9 @@
   [cofx id]
   (fx/merge cofx
             (reset-community-id-input id)
-            (navigation/navigate-to :create-community-channel nil)))
+            ;(navigation/navigate-to :create-community-channel nil)
+            (navigation/navigate-to :communities {:screen :create-community-channel})
+            ))
 
 (fx/defn community-created
   {:events [::community-created]}
