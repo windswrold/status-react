@@ -116,7 +116,7 @@
                           :elevation        2}}
          [icons/icon :main-icons/add {:color colors/white}]]]]]]))
 
-(defn countable-label [{:keys [label value max-length]}]
+(defn countable-label [{:keys [label text max-length]}]
   [rn/view {:style {:padding-bottom  10
                     :justify-content :space-between
                     :align-items     :flex-end
@@ -124,10 +124,10 @@
                     :flex-wrap       :nowrap}}
    [quo/text label]
    [quo/text {:size  :small
-              :color (if (> (count value) max-length)
+              :color (if (> (count text) max-length)
                        :negative
                        :secondary)}
-    (str (count value) "/" max-length)]])
+    (str (count text) "/" max-length)]])
 
 (defn form []
   (let [{:keys [name description membership editing?]} (<sub [:communities/create])]
@@ -138,7 +138,7 @@
                        :padding-top        10
                        :padding-horizontal 16}}
       [countable-label {:label      (i18n/label :t/name-your-community)
-                        :value      name
+                        :text       name
                         :max-length max-name-length}]
       [quo/text-input
        {:placeholder    (i18n/label :t/name-your-community-placeholder)
@@ -149,7 +149,7 @@
                        :padding-top        10
                        :padding-horizontal 16}}
       [countable-label {:label      (i18n/label :t/give-a-short-description-community)
-                        :value      description
+                        :text       description
                         :max-length max-description-length}]
       [quo/text-input
        {:placeholder    (i18n/label :t/give-a-short-description-community)

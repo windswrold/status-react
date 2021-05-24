@@ -7,13 +7,16 @@
             [status-im.ui.components.toolbar :as toolbar]
             [status-im.communities.core :as communities]
             [status-im.ui.components.topbar :as topbar]
-            [status-im.utils.debounce :as debounce]))
+            [status-im.utils.debounce :as debounce]
+            [status-im.utils.handlers :refer [>evt <sub]]
+            [status-im.ui.screens.communities.create :as create]))
 
 (defn valid? [community-name]
   (not (str/blank? community-name)))
 
 (defn create-channel []
-  (let [channel-name (reagent/atom "")]
+  (let [channel-name (reagent/atom "")
+        channel-description (reagent/atom "")]
     (fn []
       [:<>
        [topbar/topbar {:title (i18n/label :t/create-channel-title)}]
@@ -22,11 +25,24 @@
         [rn/view {:style {:padding-bottom     16
                           :padding-top        10
                           :padding-horizontal 16}}
-         [quo/text-input
-          {:label          (i18n/label :t/name-your-channel)
-           :placeholder    (i18n/label :t/name-your-channel-placeholder)
-           :on-change-text #(reset! channel-name %)
-           :auto-focus     true}]]]
+         [rn/view
+          [create/countable-label {:label      (i18n/label :t/give-a-short-description-community)
+                                   :text       @channel-name
+                                   :max-length create/max-name-length}]
+          [quo/text-input
+           {:placeholder    (i18n/label :t/name-your-channel-placeholder)
+            :on-change-text #(reset! channel-name %)
+            :auto-focus     true}]]
+         [quo/separator {:style {:margin-vertical 10}}]
+         [rn/view 
+          [create/countable-label {:label      (i18n/label :t/give-a-short-description-community)
+                            :text      @channel-description
+                            :max-length create/max-description-length}]
+          [quo/text-input
+           {:placeholder    (i18n/label :t/give-a-short-description-community)
+            :multiline      true
+            :default-value  @channel-description
+            :on-change-text #(>evt [::communities/create-field :description %])}]]]]
        [toolbar/toolbar
         {:show-border? true
          :center
