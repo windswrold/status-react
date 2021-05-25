@@ -42,7 +42,10 @@
            {:placeholder    (i18n/label :t/give-a-short-description-community)
             :multiline      true
             :default-value  @channel-description
-            :on-change-text #(reset! channel-description %)}]]]]
+            :on-change-text #(reset! channel-description %)}]
+          
+          ]]]
+       
        [toolbar/toolbar
         {:show-border? true
          :center

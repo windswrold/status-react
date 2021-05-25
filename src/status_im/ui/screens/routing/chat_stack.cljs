@@ -9,6 +9,7 @@
             [status-im.ui.screens.communities.create :as communities.create]
             [status-im.ui.screens.communities.import :as communities.import]
             [status-im.ui.screens.communities.profile :as community.profile]
+            [status-im.ui.screens.communities.channel-details :as communities.channel-details]
             [status-im.ui.screens.communities.edit :as community.edit]
             [status-im.ui.screens.communities.create-channel :as create-channel]
             [status-im.ui.screens.communities.membership :as membership]
@@ -54,6 +55,9 @@
      :component members/members-container}
     {:name      :community-requests-to-join
      :component requests-to-join/requests-to-join-container}
+    {:name :community-channel-details
+     :insets    {:top false}
+     :component communities.channel-details/view}
     ]])
 
 (defn communities []
