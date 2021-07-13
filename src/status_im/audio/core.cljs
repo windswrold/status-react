@@ -146,5 +146,6 @@
        (start-playing #() #()))))
 
 (fx/defn play-in-app-sound
+  {:events [:audio/play-in-app-sound]}
   [_ sound-id]
   {::play-in-app-sound sound-id})

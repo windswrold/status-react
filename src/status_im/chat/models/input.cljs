@@ -252,8 +252,7 @@
                 (send-edited-message input-text-with-mentions editing-message)
                 (send-messages input-text-with-mentions current-chat-id))
               (mentions/clear-mentions)
-              (mentions/clear-cursor)
-              (audio/play-in-app-sound :message_sent))))
+              (mentions/clear-cursor))))
 
 (fx/defn chat-send-sticker
   {:events [:chat/send-sticker]}

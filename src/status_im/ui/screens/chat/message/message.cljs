@@ -287,30 +287,36 @@
            identicon
            from outgoing in-popover?]
     :as   message} content {:keys [modal close-modal]}]
-  [react/view {:style               (style/message-wrapper message)
-               :pointer-events      :box-none
-               :accessibility-label :chat-item}
-   [react/view {:style          (style/message-body message)
-                :pointer-events :box-none}
-    (when display-photo?
-      [react/view (style/message-author-userpic outgoing)
-       (when first-in-group?
-         [react/touchable-highlight {:on-press #(do (when modal (close-modal))
+  (reagent/create-class
+   {:component-did-mount (fn []
+                           (when outgoing
+                             (re-frame/dispatch-sync [:audio/play-in-app-sound :message_sent])))
+    :reagent-render
+    (fn []
+      [react/view {:style               (style/message-wrapper message)
+                   :pointer-events      :box-none
+                   :accessibility-label :chat-item}
+       [react/view {:style          (style/message-body message)
+                    :pointer-events :box-none}
+        (when display-photo?
+          [react/view (style/message-author-userpic outgoing)
+           (when first-in-group?
+             [react/touchable-highlight {:on-press #(do (when modal (close-modal))
+                                                        (re-frame/dispatch [:chat.ui/show-profile from]))}
+              [photos/member-photo from identicon]])])
+        [react/view {:style (style/message-author-wrapper outgoing display-photo? in-popover?)}
+         (when display-username?
+           [react/touchable-opacity {:style    style/message-author-touchable
+                                     :disabled in-popover?
+                                     :on-press #(do (when modal (close-modal))
                                                     (re-frame/dispatch [:chat.ui/show-profile from]))}
-          [photos/member-photo from identicon]])])
-    [react/view {:style (style/message-author-wrapper outgoing display-photo? in-popover?)}
-     (when display-username?
-       [react/touchable-opacity {:style    style/message-author-touchable
-                                 :disabled in-popover?
-                                 :on-press #(do (when modal (close-modal))
-                                                (re-frame/dispatch [:chat.ui/show-profile from]))}
-        [message-author-name from {:modal modal}]])
-     ;;MESSAGE CONTENT
-     content
-     [link-preview/link-preview-wrapper (:links (:content message)) outgoing false]]]
-   ; delivery status
-   [react/view (style/delivery-status outgoing)
-    [message-delivery-status message]]])
+            [message-author-name from {:modal modal}]])
+         ;;MESSAGE CONTENT
+         content
+         [link-preview/link-preview-wrapper (:links (:content message)) outgoing false]]]
+                                        ; delivery status
+       [react/view (style/delivery-status outgoing)
+        [message-delivery-status message]]])}))
 
 (def image-max-width 260)
 (def image-max-height 192)
