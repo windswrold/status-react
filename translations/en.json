@@ -1749,5 +1749,8 @@
     "manage-connections": "Manage connections from within Application Connections",
     "wallet-manage-app-connections": "Manage app connections",
     "connection-request": "Connection Request",
-    "disconnect": "Disconnect"
+    "disconnect": "Disconnect",
+    "send-contact-request-message": "To start a chat you need to become contacts",
+    "contact-request": "Contact request",
+    "say-hi": "Say hi"
 }
