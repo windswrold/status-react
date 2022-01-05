@@ -1238,7 +1238,7 @@
   dependencies:
     deep-assign "^3.0.0"
 
-"@react-native-community/audio-toolkit@git+https://github.com/tbenr/react-native-audio-toolkit.git#v2.0.3-status-v6":
+"@react-native-community/audio-toolkit@git+https://github.com/tbenr/react-native-audio-toolkit.git#refs/tags/v2.0.3-status-v6":
   version "2.0.3"
   resolved "git+https://github.com/tbenr/react-native-audio-toolkit.git#7ae9055cf6169b30f5089bda7bfcfc1c40a715e5"
   dependencies:
@@ -1246,7 +1246,7 @@
     eventemitter3 "^1.2.0"
     lodash "^4.17.15"
 
-"@react-native-community/cameraroll@git+https://github.com/status-im/react-native-cameraroll.git#v4.0.4-status.0":
+"@react-native-community/cameraroll@git+https://github.com/status-im/react-native-cameraroll.git#refs/tags/v4.0.4-status.0":
   version "4.0.4"
   resolved "git+https://github.com/status-im/react-native-cameraroll.git#337c5a515e9b0f0728882f73568075553415f523"
 
@@ -1447,6 +1447,11 @@
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
   integrity sha512-rr+OQyAjxze7GgWrSaJwydHStIhHq2lvY3BOC2Mj7KnzI7XK0Uw1TOOdI9lDoajEbSWLiYgoo4f1R51erQfhPQ==
 
+"@types/events@*":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@types/events/-/events-3.0.0.tgz#2862f3f58a9a7f7c3e78d79f130dd4d71c25c2a7"
+  integrity sha512-EaObqwIvayI5a8dCzhFrjKzVwKLxjoG9T6Ppd5CEo07LRKfQ8Yokw54r5+Wq7FaBQ+yXRvQAYPrHwya1/UFt9g==
+
 "@types/hammerjs@^2.0.36":
   version "2.0.36"
   resolved "https://registry.yarnpkg.com/@types/hammerjs/-/hammerjs-2.0.36.tgz#17ce0a235e9ffbcdcdf5095646b374c2bf615a4c"
@@ -1481,6 +1486,32 @@
   version "1.19.1"
   resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-1.19.1.tgz#33509849f8e679e4add158959fdb086440e9553f"
   integrity sha512-5qOlnZscTn4xxM5MeGXAMOsIOIKIbh9e85zJWfBRVPlRMEVawzoPhINYbRGkBZCI8LxvBe7tJCdWiarA99OZfQ==
+
+"@types/prop-types@*":
+  version "15.7.4"
+  resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.4.tgz#fcf7205c25dff795ee79af1e30da2c9790808f11"
+  integrity sha512-rZ5drC/jWjrArrS8BR6SIr4cWpW09RNTYt9AMZo3Jwwif+iacXAqgVjm0B0Bv/S1jhDXKHqRVNCbACkJ89RAnQ==
+
+"@types/react-native@*":
+  version "0.67.2"
+  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.67.2.tgz#801656be65b875cf215cd09de208436df92fa356"
+  integrity sha512-DyBkq7kw1UngzfvBr8WE41+hL/TWpxOZVaeABJz6Si7DmpT0Rq6vJCYjVaR85ViKSYJvIHpzxYfp0dD+lb3ctA==
+  dependencies:
+    "@types/react" "*"
+
+"@types/react@*":
+  version "17.0.39"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.39.tgz#d0f4cde092502a6db00a1cded6e6bf2abb7633ce"
+  integrity sha512-UVavlfAxDd/AgAacMa60Azl7ygyQNRwC/DsHZmKgNvPmRR5p70AJ5Q9EAmL2NWOJmeV+vVUI4IAP7GZrN8h8Ug==
+  dependencies:
+    "@types/prop-types" "*"
+    "@types/scheduler" "*"
+    csstype "^3.0.2"
+
+"@types/scheduler@*":
+  version "0.16.2"
+  resolved "https://registry.yarnpkg.com/@types/scheduler/-/scheduler-0.16.2.tgz#1a62f89525723dde24ba1b01b092bf5df8ad4d39"
+  integrity sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==
 
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
@@ -1997,7 +2028,7 @@ big-integer@^1.6.44:
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.48.tgz#8fd88bd1632cba4a1c8c3e3d7159f08bb95b4b9e"
   integrity sha512-j51egjPa7/i+RdiRuJbPdJ2FIUYYPhvYLjzoYbcMMm62ooO6F94fETG4MTs46zPAF9Brs04OajboA/qTGuz78w==
 
-"bignumber.js@git+https://github.com/status-im/bignumber.js.git#v4.0.2-status":
+"bignumber.js@git+https://github.com/status-im/bignumber.js.git#refs/tags/v4.0.2-status":
   version "4.0.2"
   resolved "git+https://github.com/status-im/bignumber.js.git#cc066a0a3d6bfe0c436c9957f4ea8344bf963c89"
 
@@ -2796,6 +2827,11 @@ cssstyle@^2.0.0:
   integrity sha512-sEb3XFPx3jNnCAMtqrXPDeSgQr+jojtCeNf8cvMNMh1cG970+lljssvQDzPq6lmmJu2Vhqood/gtEomBiHOGnA==
   dependencies:
     cssom "~0.3.6"
+
+csstype@^3.0.2:
+  version "3.0.11"
+  resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.0.11.tgz#d66700c5eacfac1940deb4e3ee5642792d85cd33"
+  integrity sha512-sa6P2wJ+CAbgyy4KFssIb/JNMLxFvKF1pCYCSXS8ZMuqZnMsrxqI2E5sPyoTpxoPU/gVZMzr2zjOfg8GIZOMsw==
 
 damerau-levenshtein@^1.0.0:
   version "1.0.6"
@@ -6588,9 +6624,20 @@ react-native-camera-kit@^8.0.4:
   dependencies:
     lodash "^4.14.2"
 
-"react-native-config@git+https://github.com/status-im/react-native-config.git#v1.4.2-status":
+"react-native-config@git+https://github.com/status-im/react-native-config.git#refs/tags/v1.4.2-status":
   version "1.4.2"
   resolved "git+https://github.com/status-im/react-native-config.git#c3e58d76fed923aaf88eadc5073099fab5ecb346"
+
+react-native-dark-mode@^0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/react-native-dark-mode/-/react-native-dark-mode-0.2.2.tgz#4faa335e36330bfca832ba8b3d2bd84c7b880381"
+  integrity sha512-2vhWOOimU7DRKYjCU/pdv0+JpnGKURq5+c7bre093Jtzk57HtlJfd+ViibbC9Y8zh0viIOyKtfL5mYhVhZ6Crw==
+  dependencies:
+    "@types/events" "*"
+    "@types/react" "*"
+    "@types/react-native" "*"
+    events "^3.0.0"
+    toolkit.ts "^0.0.2"
 
 react-native-device-info@^7.4.0:
   version "7.4.0"
@@ -6640,7 +6687,7 @@ react-native-haptic-feedback@^1.9.0:
   resolved "https://registry.yarnpkg.com/react-native-haptic-feedback/-/react-native-haptic-feedback-1.9.0.tgz#7d62c54536f04dd5d8f1c2bb8ee444009f2294b9"
   integrity sha512-tIRbq8k7HK9AoyvXrOHUEFmJd65ZAh1HP9mDyD/gDisG1ApY4Im9UKn0q0of9z7s8AJY3sZA9GMuSKdSBGdKKQ==
 
-"react-native-image-crop-picker@git+https://github.com/status-im/react-native-image-crop-picker.git#v0.36.2-status.0":
+"react-native-image-crop-picker@git+https://github.com/status-im/react-native-image-crop-picker.git#refs/tags/v0.36.2-status.0":
   version "0.36.2"
   resolved "git+https://github.com/status-im/react-native-image-crop-picker.git#d14a68dcb643328b91e783d3a83561e7d6e0bd25"
 
@@ -6649,11 +6696,11 @@ react-native-image-resizer@^1.2.3:
   resolved "https://registry.yarnpkg.com/react-native-image-resizer/-/react-native-image-resizer-1.2.3.tgz#21cb2b158ff950e55a0fc01c2cb61375bd5a03ba"
   integrity sha512-RDPNJglRmWDZ/7hvu+CbpsKYl6AQmseL8cWX4UkLAHxQWNc5ZdYhP/9avC5xCfyiwkRw+Zmkmv78HO0kt0ewhQ==
 
-"react-native-image-viewing@git+https://github.com/status-im/react-native-image-viewing.git#v0.2.1.status":
+"react-native-image-viewing@git+https://github.com/status-im/react-native-image-viewing.git#refs/tags/v0.2.1.status":
   version "0.2.1"
   resolved "git+https://github.com/status-im/react-native-image-viewing.git#94af89356f2e4e08f462370c77e4778d7626ce2f"
 
-"react-native-keychain@git+https://github.com/status-im/react-native-keychain.git#v.3.0.0-5-status":
+"react-native-keychain@git+https://github.com/status-im/react-native-keychain.git#refs/tags/v.3.0.0-5-status":
   version "3.0.0-rc.3"
   resolved "git+https://github.com/status-im/react-native-keychain.git#9b0d9b283116947cf125e12b6d1d17203604f0d9"
 
@@ -6734,7 +6781,7 @@ react-native-splash-screen@^3.2.0:
   resolved "https://registry.yarnpkg.com/react-native-splash-screen/-/react-native-splash-screen-3.2.0.tgz#d47ec8557b1ba988ee3ea98d01463081b60fff45"
   integrity sha512-Ls9qiNZzW/OLFoI25wfjjAcrf2DZ975hn2vr6U9gyuxi2nooVbzQeFoQS5vQcbCt9QX5NY8ASEEAtlLdIa6KVg==
 
-"react-native-status-keycard@git+https://github.com/status-im/react-native-status-keycard.git#v2.5.37":
+"react-native-status-keycard@git+https://github.com/status-im/react-native-status-keycard.git#refs/tags/v2.5.37":
   version "2.5.37"
   resolved "git+https://github.com/status-im/react-native-status-keycard.git#af61b0213adbf4b5a6bae97c85496d95007d5acb"
 
@@ -6751,7 +6798,7 @@ react-native-touch-id@^4.4.1:
   resolved "https://registry.yarnpkg.com/react-native-touch-id/-/react-native-touch-id-4.4.1.tgz#8b1bb2d04c30bac36bb9696d2d723e719c4a8b08"
   integrity sha512-1jTl8fC+0fxvqegy/XXTyo6vMvPhjzkoDdaqoYZx0OH8AT250NuXnNPyKktvigIcys3+2acciqOeaCall7lrvg==
 
-"react-native-webview@git+https://github.com/status-im/react-native-webview.git#v11.16.0-status":
+"react-native-webview@git+https://github.com/status-im/react-native-webview.git#refs/tags/v11.16.0-status":
   version "11.16.0"
   resolved "git+https://github.com/status-im/react-native-webview.git#9d554dd25b33d799c37eb356c0dfa42ca8bd4ff7"
   dependencies:
@@ -7093,11 +7140,11 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
-"rn-emoji-keyboard@git+https://github.com/status-im/rn-emoji-keyboard.git#v0.4.2":
+"rn-emoji-keyboard@git+https://github.com/status-im/rn-emoji-keyboard.git#refs/tags/v0.4.2":
   version "0.4.2"
   resolved "git+https://github.com/status-im/rn-emoji-keyboard.git#969814269cc51fae2c1fd0375e8509fa066cdc7f"
 
-"rn-snoopy@git+https://github.com/status-im/rn-snoopy.git#v2.0.2-status":
+"rn-snoopy@git+https://github.com/status-im/rn-snoopy.git#refs/tags/v2.0.2-status":
   version "2.0.2"
   resolved "git+https://github.com/status-im/rn-snoopy.git#f23dc13469c6c2a694649f658cdc1d1eaf8def64"
   dependencies:
@@ -7937,6 +7984,11 @@ toidentifier@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/toidentifier/-/toidentifier-1.0.0.tgz#7e1be3470f1e77948bc43d94a3c8f4d7752ba553"
   integrity sha512-yaOH/Pk/VEhBWWTlhI+qXxDFXlejDGcQipMlyxda9nthulaxLZUNcUqFxokp0vcYnvteJln5FNQDRrxj3YcbVw==
+
+toolkit.ts@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/toolkit.ts/-/toolkit.ts-0.0.2.tgz#91bde730e5e6ad1a22146cdaf83f4a52721cf3b2"
+  integrity sha512-yJJTVbCwiD6AfFgReewJCGJuODmyZUeL1sDjnxp33t0UBxnezgQrLbz/F9++RC28CTlk5u5pVji4TbeondYEkw==
 
 tough-cookie@^2.3.3, tough-cookie@~2.5.0:
   version "2.5.0"
