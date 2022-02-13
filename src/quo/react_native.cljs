@@ -33,6 +33,8 @@
 (def touchable-without-feedback (reagent/adapt-react-class (.-TouchableWithoutFeedback ^js rn)))
 (def text-input (reagent/adapt-react-class  (.-TextInput ^js rn)))
 
+(def android-native-text-input (reagent/adapt-react-class (.requireNativeComponent ^js rn "AndroidNativeTextInput")))
+
 (def keyboard-avoiding-view-class (reagent/adapt-react-class (.-KeyboardAvoidingView ^js rn)))
 
 (def navigation-const (atom nil))

@@ -234,7 +234,7 @@
         last-text-change (atom nil)
         mentions-enabled (get @mentions-enabled chat-id)]
 
-    [rn/text-input
+    [rn/android-native-text-input
      {:style                    (styles/text-input)
       :ref                      (:text-input-ref refs)
       :max-font-size-multiplier 1
