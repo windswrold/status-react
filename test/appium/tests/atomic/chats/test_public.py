@@ -495,19 +495,19 @@ class TestMessaging(MultipleSharedDeviceTestCase):
         self.chat_1.chat_element_by_text(message_from_sender).long_press_element()
         if self.chat_1.view_profile_by_avatar_button.is_element_displayed():
             self.errors.append('Member photo is shown on long tap on sent message from 1-1 chat')
-        # self.chat_1.click_system_back_button(2)
+        self.chat_1.click_system_back_button(2)
 
         self.home_2.just_fyi("1-1 chat: receiver verifies that can open sender profile on long tap on message")
         self.chat_2.chat_element_by_text(message_from_sender).long_press_element()
         if self.chat_2.view_profile_by_avatar_button.is_element_displayed():
             self.errors.append('1-1 chat: another user profile is opened on long tap on received message')
-        # self.chat_2.click_system_back_button(2)
+        self.chat_2.click_system_back_button(2)
 
     @marks.testrail_id(702068)
     @marks.medium
     def test_messaging_open_user_profile_long_press_on_message_in_public_chat(self):
         message_from_receiver = "Message receiver"
-        [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
+        # [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
         [home.get_chat('#' + self.public_chat_name).click() for home in (self.home_1, self.home_2)]
         self.home_1.just_fyi(
             'Public chat: send message and verify that user profile can be opened on long press on message')
