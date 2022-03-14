@@ -329,8 +329,8 @@ class TestPublicChatOneDeviceMerged(MultipleSharedDeviceTestCase):
             self.driver.fail("Public chat '%s' is not opened" % chat_name)
 
 
-@pytest.mark.xdist_group(name="messaging_1")
-class TestMessaging(MultipleSharedDeviceTestCase):
+@pytest.mark.xdist_group(name="messaging_2")
+class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
 
     @classmethod
     def setup_class(cls):
@@ -342,25 +342,30 @@ class TestMessaging(MultipleSharedDeviceTestCase):
         profile_2 = cls.home_2.get_profile_view()
         profile_2.switch_network()
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
+
+        cls.home_1.just_fyi("Creating 1-1 chats")
+        cls.chat_1 = cls.home_1.add_contact(cls.public_key_2)
         cls.chat_2 = cls.home_2.add_contact(cls.public_key_1)
-        cls.chat_2.chat_message_input.send_keys('test message')
-        cls.chat_2.send_message_button.click()
         cls.home_2.just_fyi('Install free sticker pack and use it in 1-1 chat')
         cls.chat_2.install_sticker_pack_by_name()
-        cls.chat_1 = cls.home_1.add_contact(cls.public_key_2)
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
+
+        cls.home_1.just_fyi("Creating group chats")
         cls.group_chat_name = "GroupChat"
         cls.group_chat_1 = cls.home_1.create_group_chat(user_names_to_add=[cls.default_username_2], group_chat_name=cls.group_chat_name)
         cls.home_2.get_chat(cls.group_chat_name).click()
         cls.group_chat_2 = cls.home_2.get_chat_view()
         cls.group_chat_2.join_chat_button.click()
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
+
+        cls.home_1.just_fyi("Creating public chats")
         cls.public_chat_name = cls.home_1.get_random_chat_name()
-        cls.public_chat_1, cls.public_chat_2 = cls.home_1.join_public_chat(cls.public_chat_name), cls.home_2.join_public_chat(
-            cls.public_chat_name)
+        cls.public_chat_1, cls.public_chat_2 = cls.home_1.join_public_chat(cls.public_chat_name), cls.home_2.join_public_chat(cls.public_chat_name)
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
+
         cls.home_1.get_chat(cls.default_username_2).click()
         cls.home_2.get_chat(cls.default_username_1).click()
+
         cls.message_1, cls.message_2, cls.message_3, cls.message_4 = "Message1", "Message2", "Message3", "Message4"
 
     @marks.testrail_id(702065)
@@ -380,8 +385,7 @@ class TestMessaging(MultipleSharedDeviceTestCase):
         for message, symbol in markdown.items():
             self.home_1.just_fyi('checking that "%s" is applied (%s) in 1-1 chat' % (message, symbol))
             message_to_send = symbol + message + symbol if 'quote' not in message else symbol + message
-            self.chat_2.chat_message_input.send_keys(message_to_send)
-            self.chat_2.send_message_button.click()
+            self.chat_2.send_message(message_to_send)
             if not self.chat_2.chat_element_by_text(message).is_element_displayed():
                 self.errors.append('%s is not displayed with markdown in 1-1 chat for the sender \n' % message)
 
@@ -389,25 +393,32 @@ class TestMessaging(MultipleSharedDeviceTestCase):
                 self.errors.append('%s is not displayed with markdown in 1-1 chat for the recipient \n' % message)
 
         [chat.home_button.double_click() for chat in (self.chat_1, self.chat_2)]
-        chat_name = self.home_1.get_random_chat_name()
-        [home.join_public_chat(chat_name) for home in (self.home_1, self.home_2)]
+
+        # chat_name = self.home_1.get_random_chat_name()
+        # [home.join_public_chat(chat_name) for home in (self.home_1, self.home_2)]
+
+        [home.get_chat('#' + self.public_chat_name).click() for home in (self.home_1, self.home_2)]
 
         for message, symbol in markdown.items():
             self.home_1.just_fyi('checking that "%s" is applied (%s) in public chat' % (message, symbol))
             message_to_send = symbol + message + symbol if 'quote' not in message else symbol + message
-            self.chat_2.chat_message_input.send_keys(message_to_send)
-            self.chat_2.send_message_button.click()
-            if not self.chat_2.chat_element_by_text(message).is_element_displayed(30):
+            self.public_chat_1.send_message(message_to_send)
+            if not self.public_chat_2.chat_element_by_text(message).is_element_displayed(30):
                 self.errors.append('%s is not displayed with markdown in public chat for the sender \n' % message)
 
-            if not self.chat_1.chat_element_by_text(message).is_element_displayed(30):
+            if not self.public_chat_1.chat_element_by_text(message).is_element_displayed(30):
                 self.errors.append('%s is not displayed with markdown in public chat for the recipient \n' % message)
+
+        [chat.home_button.double_click() for chat in (self.public_chat_1, self.public_chat_2)]
 
         self.errors.verify_no_errors()
 
     @marks.testrail_id(702066)
     @marks.medium
     def test_messaging_push_notifications_reactions_for_messages_in_stickers_audio_image(self):
+
+        self.home_1.get_chat(self.default_username_2).click()
+        self.home_2.get_chat(self.default_username_1).click()
 
         # methods with steps to use later in loop
         def navigate_to_start_state_of_both_devices():
@@ -483,51 +494,6 @@ class TestMessaging(MultipleSharedDeviceTestCase):
             self.errors.append("Counter of reaction is not re-set on Emoji for message receiver!")
 
         self.errors.verify_no_errors()
-
-    @marks.testrail_id(702067)
-    @marks.medium
-    def test_messaging_open_user_profile_long_press_on_message_1_1_chat(self):
-
-        message_from_sender = "Message sender"
-
-        self.home_1.just_fyi("1-1 chat: sender adds receiver and send a message")
-        self.chat_1.send_message(message_from_sender)
-        self.chat_1.chat_element_by_text(message_from_sender).long_press_element()
-        if self.chat_1.view_profile_by_avatar_button.is_element_displayed():
-            self.errors.append('Member photo is shown on long tap on sent message from 1-1 chat')
-        self.chat_1.click_system_back_button(2)
-
-        self.home_2.just_fyi("1-1 chat: receiver verifies that can open sender profile on long tap on message")
-        self.chat_2.chat_element_by_text(message_from_sender).long_press_element()
-        if self.chat_2.view_profile_by_avatar_button.is_element_displayed():
-            self.errors.append('1-1 chat: another user profile is opened on long tap on received message')
-        self.chat_2.click_system_back_button(2)
-
-    @marks.testrail_id(702068)
-    @marks.medium
-    def test_messaging_open_user_profile_long_press_on_message_in_public_chat(self):
-        message_from_receiver = "Message receiver"
-        # [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
-        [home.get_chat('#' + self.public_chat_name).click() for home in (self.home_1, self.home_2)]
-        self.home_1.just_fyi(
-            'Public chat: send message and verify that user profile can be opened on long press on message')
-        # chat_public_1, chat_public_2 = home_1.get_chat_view(), home_2.get_chat_view()
-        self.public_chat_2.send_message(message_from_receiver)
-        self.public_chat_2.chat_element_by_text(message_from_receiver).long_press_element()
-        if self.public_chat_2.view_profile_by_avatar_button.is_element_displayed():
-            self.errors.append('Public chat: "view profile" is shown on long tap on sent message')
-        self.public_chat_1.view_profile_long_press(message_from_receiver)
-        if not self.public_chat_1.remove_from_contacts.is_element_displayed():
-            self.errors.append('Public chat: another user profile is not opened on long tap on received message')
-
-        self.errors.verify_no_errors()
-
-        self.public_chat_1.get_back_to_home_view()
-        self.public_chat_2.click_system_back_button(2)
-
-        # [chat.home_button.double_click() for chat in [self.public_chat_1, self.public_chat_2]]
-        self.home_1.get_chat(self.default_username_2).click()
-        self.home_2.get_chat(self.default_username_1).click()
 
     @marks.testrail_id(702069)
     @marks.medium
