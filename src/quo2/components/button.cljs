@@ -16,9 +16,9 @@
                                  :background-color {:default  colors/primary-50-opa-20
                                                     :pressed  colors/primary-50-opa-40
                                                     :disabled colors/primary-50-opa-20}}
-                     :grey      {:icon-color       colors/neutral-50
+                     :grey      {:icon-color       colors/black
                                  :label            {:style {:color colors/black}}
-                                 :background-color {:default  colors/neutral-40
+                                 :background-color {:default  colors/neutral-20
                                                     :pressed  colors/neutral-30
                                                     :disabled colors/neutral-20}}
                      :outline   {:icon-color   colors/neutral-50

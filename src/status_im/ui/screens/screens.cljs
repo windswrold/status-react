@@ -355,7 +355,6 @@
            ;;WALLET
 
            {:name      :wallet
-            :insets    {:top false}
             :on-focus  [:wallet/tab-opened]
             :component wallet.accounts/accounts-overview}
            {:name      :wallet-account
