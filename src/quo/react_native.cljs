@@ -74,6 +74,9 @@
 (def animated-view
   (reagent/adapt-react-class (.-View ^js animated)))
 
+(def animated-image-view
+  (reagent/adapt-react-class (.-Image ^js animated)))
+
 (def ui-manager  (.-UIManager ^js rn))
 
 (def layout-animation (.-LayoutAnimation ^js rn))
@@ -102,6 +105,8 @@
                                                               :property (:opacity layout-animation-properties)}
                                                :delete   #js {:type     (:ease-in-ease-out layout-animation-types)
                                                               :property (:opacity layout-animation-properties)}}})
+(defonce enable-layout-animations
+  (when platform/android? (.setLayoutAnimationEnabledExperimental ^js ui-manager true)))
 
 (def activity-indicator (reagent/adapt-react-class (.-ActivityIndicator ^js rn)))
 

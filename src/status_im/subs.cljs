@@ -87,6 +87,7 @@
 (reg-root-key-sub :home-items-show-number :home-items-show-number)
 (reg-root-key-sub :waku/v2-peer-stats :peer-stats)
 (reg-root-key-sub :visibility-status-updates :visibility-status-updates)
+(reg-root-key-sub :navigation2-stacks :navigation2/navigation2-stacks)
 
 ;;NOTE this one is not related to ethereum network
 ;; it is about cellular network/ wifi network
@@ -2956,3 +2957,13 @@
  :<- [:bookmarks]
  (fn [bookmarks]
    (into {} (remove #(:removed (second %)) bookmarks))))
+
+
+;; NAVIGATION2
+
+
+(re-frame/reg-sub
+ :navigation2/switcher-cards
+ :<- [:navigation2/navigation2-stacks]
+ (fn [_]
+   {:chats-stack {:type :root}}))
