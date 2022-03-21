@@ -308,7 +308,7 @@
 
 (defn message-content-wrapper
   "Author, userpic and delivery wrapper"
-  [{:keys [first-in-group? display-photo? display-username?
+  [{:keys [last-in-group? display-photo? display-username?
            identicon
            from outgoing in-popover?]
     :as   message} content {:keys [modal close-modal]}]
@@ -317,12 +317,11 @@
                :accessibility-label :chat-item}
    [react/view {:style          (style/message-body message)
                 :pointer-events :box-none}
-    (when display-photo?
       [react/view (style/message-author-userpic outgoing)
-       (when first-in-group?
+       (when last-in-group?
          [react/touchable-highlight {:on-press #(do (when modal (close-modal))
                                                     (re-frame/dispatch [:chat.ui/show-profile from]))}
-          [photos/member-photo from identicon]])])
+          [photos/member-photo from identicon]])]
     [react/view {:style (style/message-author-wrapper outgoing display-photo? in-popover?)}
      (when display-username?
        [react/touchable-opacity {:style    style/message-author-touchable
@@ -478,8 +477,7 @@
                   [react/touchable-highlight
                    {:on-press #(swap! collapsed? not)
                     :style    {:position :absolute :bottom 0 :left 0 :right 0 :height 72}}
-                   [react/linear-gradient {:colors [(str color "00") color]
-                                           :start  {:x 0 :y 0} :end {:x 0 :y 0.9}}
+                   [react/view
                     [react/view {:height         72 :align-self :center :justify-content :flex-end
                                  :padding-bottom 10}
                      [react/view (style/collapse-button)

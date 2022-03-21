@@ -65,8 +65,8 @@
 
 (defn message-wrapper [{:keys [outgoing in-popover?]}]
   (if (and outgoing (not in-popover?))
-    {:margin-left 96}
-    {:margin-right 96}))
+    {:margin-left 0}
+    {:margin-right 10}))
 
 (defn message-author-wrapper
   [outgoing display-photo? in-popover?]
@@ -145,13 +145,12 @@
   {:margin-left 5})
 
 (def message-author-touchable
-  {:margin-left    12
+  {:margin-left    0
    :flex-direction :row})
 
 (defn message-author-userpic [outgoing]
   (merge
-   {:width      (+ 16 photos/default-size) ;; 16 is for the padding
-    :align-self :flex-end}
+   {:width      (+ 16 photos/default-size)} ;; 16 is for the padding
    (if outgoing
      {:padding-left 8}
      {:padding-horizontal 8
@@ -195,7 +194,7 @@
 
 (defn message-view-wrapper [outgoing]
   {:align-self :flex-end
-   :flex-direction (if outgoing :row :row-reverse)})
+   :flex-direction :row-reverse})
 
 (defn message-view
   [{:keys [content-type outgoing group-chat last-in-group? mentioned pinned]}]
@@ -204,26 +203,21 @@
     :border-top-right-radius    16
     :border-bottom-right-radius 16
     :border-bottom-left-radius  16
-    :padding-top                6
-    :padding-horizontal         12
-    :border-radius              8
+    :padding-top                0
     :margin-top                 (if (and last-in-group?
                                          (or outgoing
                                              (not group-chat)))
                                   16
                                   0)}
-   (if outgoing
-     {:border-bottom-right-radius 4}
-     {:border-bottom-left-radius 4})
 
    (cond
      pinned                                             {:background-color colors/pin-background}
      (= content-type constants/content-type-system-text) nil
-     outgoing                                            {:background-color colors/blue}
+     outgoing                                            {:background-color colors/white}
      mentioned                                           {:background-color colors/mentioned-background
                                                           :border-color colors/mentioned-border
                                                           :border-width 1}
-     :else                                               {:background-color colors/blue-light})
+     :else                                               {:background-color colors/white})
 
    (when (= content-type constants/content-type-emoji)
      {:flex-direction :row})))

@@ -3,9 +3,12 @@
 
 (def datemark-mobile
   {:flex        1
-   :align-items :center
-   :margin-top  16
-   :height      22})
+   :justify-content :center
+   :margin-vertical 16
+   :padding-left 50})
 
 (defn datemark-text []
-  {:color colors/gray})
+  {:color colors/gray
+   :font-size 14
+   :line-height 16
+   :font-weight "400"})

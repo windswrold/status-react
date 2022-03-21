@@ -3,9 +3,10 @@
 
 (def default-font-family "Inter")
 (defn default-style []
-  {:color       colors/black
+  {:color       colors/black-light
    :font-weight "400"
-   :font-size   15})
+   :font-size   15
+   :line-height 20})
 
 (def typography-styles
   {:header        {:font-weight "700"
