@@ -334,23 +334,14 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
 
     @classmethod
     def setup_class(cls):
-        cls.drivers, cls.loop = create_shared_drivers(3)
-        cls.device_1, cls.device_2, cls.device_3 = SignInView(cls.drivers[0]), SignInView(cls.drivers[1]), SignInView(cls.drivers[2])
+        cls.drivers, cls.loop = create_shared_drivers(2)
+        cls.device_1, cls.device_2 = SignInView(cls.drivers[0]), SignInView(cls.drivers[1])
         cls.home_1, cls.home_2 = cls.device_1.create_user(enable_notifications=True), cls.device_2.create_user()
         cls.public_key_1, cls.default_username_1 = cls.home_1.get_public_key_and_username(return_username=True)
         cls.public_key_2, cls.default_username_2 = cls.home_2.get_public_key_and_username(return_username=True)
         profile_2 = cls.home_2.profile_button.click()
-        profile_2.privacy_and_security_button.click()
-        profile_2.backup_recovery_phrase_button.click()
-        profile_2.ok_continue_button.click()
-        cls.recovery_phrase = profile_2.get_recovery_phrase()
-        profile_2.click_system_back_button(2)
-        # cls.profile_2.close_button.click()
         profile_2.switch_network()
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
-
-        # Added temporary such pulls to refresh all over the tests in group to prevent device 3 session from failing due to 600 seconds commandTimeout
-        cls.device_3.pull_to_refresh(1)
 
         cls.home_1.just_fyi("Creating 1-1 chats")
         cls.chat_1 = cls.home_1.add_contact(cls.public_key_2)
@@ -359,13 +350,10 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         cls.chat_2.install_sticker_pack_by_name()
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
 
-        cls.device_3.pull_to_refresh(1)
-
         cls.home_1.just_fyi("Creating group chats")
         cls.group_chat_name = "GroupChat"
         cls.group_chat_1 = cls.home_1.create_group_chat(user_names_to_add=[cls.default_username_2], group_chat_name=cls.group_chat_name)
         cls.home_2.get_chat(cls.group_chat_name).click()
-        # cls.group_chat_2 = cls.home_2.get_chat_view()
         cls.group_chat_2 = cls.home_2.get_chat(cls.group_chat_name).click()
         cls.group_chat_2.join_chat_button.click()
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
@@ -383,7 +371,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
     @marks.testrail_id(702066)
     @marks.medium
     def test_messaging_push_notifications_reactions_for_messages_in_stickers_audio_image(self):
-        self.device_3.pull_to_refresh(1)
 
         # methods with steps to use later in loop
         def navigate_to_start_state_of_both_devices():
@@ -432,7 +419,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
             if message.emojis_below_message(own=False) == 1:
                 self.errors.append("Counter of reaction is not re-set on %s for message receiver!" % key)
 
-
         self.chat_2.just_fyi("Sending Emoji/Tag/Links in chat")
         # TODO: add link and tag messages after #11168 is fixed(rechecked 23.11.21, valid)
         navigate_to_start_state_of_both_devices()
@@ -464,7 +450,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
     @marks.testrail_id(702069)
     @marks.medium
     def test_messaging_can_pin_messages_in_one_to_one_chat(self):
-        self.device_3.pull_to_refresh(1)
 
         self.home_1.just_fyi("Check that Device1 can pin own message in 1-1 chat")
         self.chat_1.send_message(self.message_1)
@@ -475,8 +460,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
 
         self.home_1.just_fyi("Check that Device2 can pin Device1 message in 1-1 chat and two pinned "
                              "messages are in Device1 profile")
-        # self.home_2.home_button.click()
-        # chat_2 = self.home_2.get_chat(self.default_username_1).click()
         self.chat_2.pin_message(self.message_2)
         self.chat_2.chat_options.click()
         self.chat_2.view_profile_button.click()
@@ -499,8 +482,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
                 self.chat_2.chat_element_by_text(self.message_2).is_element_present()):
             self.drivers[0].fail("Something missed on Pinned messaged on Device 2!")
         self.chat_1.close_button.click()
-
-        self.device_3.pull_to_refresh(1)
 
         self.home_1.just_fyi("Check that Device1 can not pin more than 3 messages and 'Unpin' dialog appears"
                              "messages are in Device1 profile")
@@ -532,7 +513,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
     @marks.testrail_id(702065)
     @marks.medium
     def test_messaging_markdown_support_in_messages(self):
-        self.device_3.pull_to_refresh(1)
         markdown = {
             'bold text in asterics': '**',
             'bold text in underscores': '__',
@@ -553,13 +533,7 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
             if not self.chat_1.chat_element_by_text(message).is_element_displayed():
                 self.errors.append('%s is not displayed with markdown in 1-1 chat for the recipient \n' % message)
 
-        self.device_3.pull_to_refresh(1)
-
         [chat.home_button.double_click() for chat in (self.chat_1, self.chat_2)]
-
-        # chat_name = self.home_1.get_random_chat_name()
-        # [home.join_public_chat(chat_name) for home in (self.home_1, self.home_2)]
-
         [home.get_chat('#' + self.public_chat_name).click() for home in (self.home_1, self.home_2)]
 
         for message, symbol in markdown.items():
@@ -577,7 +551,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
     @marks.testrail_id(702097)
     @marks.medium
     def test_block_and_unblock_user_from_group_chat_via_group_info(self):
-        self.device_3.pull_to_refresh(1)
 
         [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
 
@@ -596,8 +569,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         if self.group_chat_1.chat_element_by_text(message_after_block).is_element_displayed(10):
             self.errors.append('User was blocked, but new messages still received')
 
-        self.device_3.pull_to_refresh(1)
-
         self.home_1.just_fyi('Unblock user via group info and check that new messages will arrive')
         options_2 = self.group_chat_1.get_user_options(self.default_username_2)
         options_2.view_profile_button.click()
@@ -613,7 +584,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
     @marks.testrail_id(702070)
     @marks.medium
     def test_messaging_can_pin_messages_in_group_chats(self):
-        self.device_3.pull_to_refresh(1)
 
         [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
 
@@ -629,8 +599,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         self.group_chat_2.chat_element_by_text(self.message_1).long_press_element()
         if self.group_chat_2.element_by_translation_id("unpin").is_element_present():
             self.errors.append("Unpin option is available for non-admin user")
-
-        self.device_3.pull_to_refresh(1)
 
         self.home_1.just_fyi("Grant another user with admin rights and check he can unpin message now")
         self.group_chat_1.chat_options.click()
@@ -648,7 +616,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
     @marks.testrail_id(702098)
     @marks.medium
     def test_rename_group_chat(self):
-        self.device_3.pull_to_refresh(1)
 
         [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
         new_chat_name = self.home_1.get_random_chat_name()
@@ -671,83 +638,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         # Set back initial group chat name for the next e2e tests
         self.group_chat_1.rename_chat_via_group_info(self.group_chat_name)
 
-        self.errors.verify_no_errors()
-
-    @marks.testrail_id(6317)
-    @marks.medium
-    def test_pair_devices_group_chat_different_messages_nicknames(self):
-
-        [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
-        # Recovering account on 3 rd device for pairing with device 2
-        home_3 = self.device_3.recover_access(passphrase=' '.join(self.recovery_phrase.values()))
-        nickname = 'my_tester'
-        device_2_name, device_3_name = 'creator', 'paired'
-        self.home_2.get_chat(self.group_chat_name).click()
-
-        # Setting nickname for user 1 in group_chat_2
-        self.group_chat_2.chat_options.click()
-        self.group_chat_2.group_info.click()
-        self.group_chat_2.element_by_text(self.default_username_1).click()
-        self.group_chat_2.set_nickname(nickname, close_profile=True)
-        self.group_chat_2.get_back_to_home_view()
-
-        self.home_2.just_fyi('Go to profile > Devices, set device name, discover device 2 to device 1')
-
-        profile_3 = home_3.profile_button.click()
-        profile_3.discover_and_advertise_device(device_3_name)
-        profile_2 = self.home_2.profile_button.click()
-        profile_2.discover_and_advertise_device(device_2_name)
-        profile_2.get_toggle_device_by_name(device_3_name).click()
-        profile_2.sync_all_button.click()
-        profile_2.sync_all_button.wait_for_visibility_of_element(15)
-        profile_2.click_system_back_button(2)
-
-        profile_3.home_button.click()
-        profile_2.home_button.click()
-
-        [home.get_chat(self.group_chat_name).click() for home in (self.home_1, self.home_2)]
-        text_message = 'some text'
-        self.group_chat_2.send_message(text_message)
-
-        group_chat_3 = home_3.get_chat(self.group_chat_name).click()
-
-        for chat in group_chat_3, self.group_chat_2, self.group_chat_1:
-            if not chat.chat_element_by_text(text_message).is_element_displayed():
-                self.errors.append('Message was sent, but it is not shown')
-
-        self.home_1.just_fyi('Send message to group chat as member and verify nickname on it')
-        message_from_member = 'member1'
-        self.group_chat_1.send_message(message_from_member)
-        self.group_chat_2.chat_element_by_text(message_from_member).wait_for_visibility_of_element(20)
-        for chat in self.group_chat_2, group_chat_3:
-            if not chat.chat_element_by_text(message_from_member).username != '%s %s' % (nickname, self.default_username_1):
-                self.errors.append('Nickname is not shown in group chat')
-
-        self.home_2.just_fyi('Send image to group chat and verify it on all devices')
-        self.group_chat_2.show_images_button.click()
-        self.group_chat_2.allow_button.click()
-        self.group_chat_2.first_image_from_gallery.click()
-        self.group_chat_2.send_message_button.click()
-        self.group_chat_2.chat_message_input.click()
-        for chat in group_chat_3, self.group_chat_2, self.group_chat_1:
-            if not chat.image_message_in_chat.is_element_displayed(60):
-                self.errors.append('Image is not shown in chat after sending for %s' % chat.driver.number)
-
-        self.home_2.just_fyi('Send audio message to group chat and verify it on all devices')
-        self.group_chat_2.record_audio_message(message_length_in_seconds=3)
-        self.group_chat_2.send_message_button.click()
-        self.group_chat_2.chat_message_input.click()
-        for chat in group_chat_3, self.group_chat_2, self.group_chat_1:
-            if not chat.play_pause_audio_message_button.is_element_displayed(30):
-                self.errors.append('Audio message is not shown in chat after sending!')
-
-        self.home_2.just_fyi('Send sticker to group chat and verify it on all devices')
-        # self.group_chat_2.profile_button.click()
-        self.group_chat_2.show_stickers_button.click()
-        self.group_chat_2.sticker_icon.click()
-        for chat in group_chat_3, self.group_chat_2, self.group_chat_1:
-            if not chat.sticker_message.is_element_displayed(30):
-                self.errors.append('Sticker was not sent')
         self.errors.verify_no_errors()
 
 
@@ -911,6 +801,8 @@ class TestPublicChatMultipleDevice(MultipleDeviceTestCase):
         # Waiting for 3 minutes and then going back online
         sleep(180)
         device_1.toggle_airplane_mode()
+        # pub_chat_1.get_back_to_home_view()
+        # home_1.get_chat('#' + pub_chat_name).wait_and_click(30)
 
         home_1.just_fyi("Checking gap in public chat and fetching messages")
         if pub_chat_1.chat_element_by_text(message_1).is_element_displayed(10):
