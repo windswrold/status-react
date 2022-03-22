@@ -624,9 +624,11 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         [home.get_chat(self.group_chat_name).click() for home in (self.home_1, self.home_2)]
         self.group_chat_1.rename_chat_via_group_info(new_chat_name)
         for chat in (self.group_chat_1, self.group_chat_2):
+            chat.swipe_up()
             if not chat.element_by_text(
                     chat.create_system_message(self.default_username_1, self.group_chat_name)).is_element_displayed():
                 self.errors.append('Initial system message about creating chat was changed!')
+            chat.swipe_down()
             if not chat.element_by_text(
                     chat.changed_group_name_system_message(self.default_username_1, new_chat_name)).is_element_displayed():
                 self.errors.append('Message about changing chat name is not shown')
