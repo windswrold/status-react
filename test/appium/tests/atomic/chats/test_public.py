@@ -351,10 +351,10 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
 
         cls.home_1.just_fyi("Creating group chats")
-        cls.group_chat_name = "GroupChat"
-        cls.group_chat_1 = cls.home_1.create_group_chat(user_names_to_add=[cls.default_username_2], group_chat_name=cls.group_chat_name)
-        cls.home_2.get_chat(cls.group_chat_name).click()
-        cls.group_chat_2 = cls.home_2.get_chat(cls.group_chat_name).click()
+        cls.initial_group_chat_name = "GroupChat before rename"
+        cls.new_group_chat_name = "GroupChat after rename"
+        cls.group_chat_1 = cls.home_1.create_group_chat(user_names_to_add=[cls.default_username_2], group_chat_name=cls.initial_group_chat_name)
+        cls.group_chat_2 = cls.home_2.get_chat(cls.initial_group_chat_name).click()
         cls.group_chat_2.join_chat_button.click()
         [home.home_button.click() for home in (cls.home_1, cls.home_2)]
 
@@ -548,6 +548,31 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
 
         self.errors.verify_no_errors()
 
+    @marks.testrail_id(702098)
+    @marks.medium
+    def test_rename_group_chat(self):
+
+        [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
+        # new_chat_name = self.home_1.get_random_chat_name()
+
+        self.home_2.just_fyi('Rename chat and check system messages')
+        [home.get_chat(self.initial_group_chat_name).click() for home in (self.home_1, self.home_2)]
+        self.group_chat_1.rename_chat_via_group_info(self.new_group_chat_name)
+        for chat in (self.group_chat_1, self.group_chat_2):
+            if not chat.element_by_text(
+                    chat.create_system_message(self.default_username_1, self.initial_group_chat_name)).is_element_displayed():
+                self.errors.append('Initial system message about creating chat was changed!')
+            if not chat.element_by_text(
+                    chat.changed_group_name_system_message(self.default_username_1,
+                                                           self.new_group_chat_name)).is_element_displayed():
+                self.errors.append('Message about changing chat name is not shown')
+
+        self.home_2.just_fyi('Check that you can see renamed chat')
+        self.group_chat_2.back_button.click()
+        self.home_2.get_chat(self.new_group_chat_name).wait_for_visibility_of_element(60)
+
+        self.errors.verify_no_errors()
+
     @marks.testrail_id(702097)
     @marks.medium
     def test_block_and_unblock_user_from_group_chat_via_group_info(self):
@@ -555,7 +580,7 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
 
         self.home_2.just_fyi('Send message and block user via Group Info')
-        [home.get_chat(self.group_chat_name).click() for home in (self.home_1, self.home_2)]
+        [home.get_chat(self.new_group_chat_name).click() for home in (self.home_1, self.home_2)]
         message_before_block = 'message from device2'
         self.group_chat_2.send_message(message_before_block)
         options_2 = self.group_chat_1.get_user_options(self.default_username_2)
@@ -588,7 +613,7 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
 
         self.home_1.just_fyi("Enter group chat and pin message there. It's pinned for both members.")
-        [home.get_chat(self.group_chat_name).click() for home in (self.home_1, self.home_2)]
+        [home.get_chat(self.new_group_chat_name).click() for home in (self.home_1, self.home_2)]
         self.group_chat_1.send_message(self.message_1)
         self.group_chat_1.pin_message(self.message_1)
         if not (self.group_chat_1.chat_element_by_text(self.message_1).pinned_by_label.is_element_present(30) and
@@ -610,35 +635,6 @@ class TestMessagingMultipleDevice(MultipleSharedDeviceTestCase):
         if (self.group_chat_1.chat_element_by_text(self.message_1).pinned_by_label.is_element_present() and
                 self.group_chat_2.chat_element_by_text(self.message_1).pinned_by_label.is_element_present()):
             self.errors.append("Message failed be unpinned by user who granted admin permissions!")
-
-        self.errors.verify_no_errors()
-
-    @marks.testrail_id(702098)
-    @marks.medium
-    def test_rename_group_chat(self):
-
-        [chat.home_button.double_click() for chat in [self.chat_1, self.chat_2]]
-        new_chat_name = self.home_1.get_random_chat_name()
-
-        self.home_2.just_fyi('Rename chat and check system messages')
-        [home.get_chat(self.group_chat_name).click() for home in (self.home_1, self.home_2)]
-        self.group_chat_1.rename_chat_via_group_info(new_chat_name)
-        for chat in (self.group_chat_1, self.group_chat_2):
-            chat.swipe_up()
-            if not chat.element_by_text(
-                    chat.create_system_message(self.default_username_1, self.group_chat_name)).is_element_displayed():
-                self.errors.append('Initial system message about creating chat was changed!')
-            chat.swipe_down()
-            if not chat.element_by_text(
-                    chat.changed_group_name_system_message(self.default_username_1, new_chat_name)).is_element_displayed():
-                self.errors.append('Message about changing chat name is not shown')
-
-        self.home_2.just_fyi('Check that you can see renamed chat')
-        self.group_chat_2.back_button.click()
-        self.home_2.get_chat(new_chat_name).wait_for_visibility_of_element(60)
-
-        # Set back initial group chat name for the next e2e tests
-        self.group_chat_1.rename_chat_via_group_info(self.group_chat_name)
 
         self.errors.verify_no_errors()
 
