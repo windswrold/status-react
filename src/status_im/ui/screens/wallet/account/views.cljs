@@ -19,7 +19,7 @@
             [status-im.ui.screens.wallet.collectibles.views :as collectibles.views]
             [status-im.ui.screens.wallet.buy-crypto.views :as buy-crypto]
             [quo2.foundations.colors :as quo2.colors]
-            [status-im.utils.handlers :refer [>evt <sub]]
+            [status-im.utils.handlers :refer [<sub]]
             [quo2.components.text :as quo2.text]
             [quo2.components.button :as quo2.button]
             [quo2.components.tabs :as quo2.tabs])
@@ -108,8 +108,8 @@
   (views/letsubs [{:keys [tokens]} [:wallet/visible-assets-with-values address]
                   currency [:wallet/currency]
                   opensea-enabled? [:opensea-enabled?]
-                  collectible-collection [:wallet/collectible-collection address]
-                  ethereum-network? [:ethereum-network?]]
+                  collectible-collection [:wallet/collectible-collection address]]
+                  ;ethereum-network? [:ethereum-network?]]
     (let [tab @selected-tab]
       [react/view {:flex 1}
        [react/view {:padding-horizontal 20 :padding-bottom 20}
@@ -121,10 +121,10 @@
                                 {:id :activity :label "Activity"}]}]]
        (cond
          (= tab :tokens)
-         [:<>
+         [react/scroll-view
           (for [item tokens]
             ^{:key (:name item)}
-            [common/render-asset item nil nil (:code currency)])]
+            [common/render-asset-new item nil nil (:code currency)])]
          (= tab :nft)
          [:<>
           [opensea-link address]
@@ -248,14 +248,14 @@
          [transactions address])])))
 
 (defn account-new [selected-account]
-  (let [{:keys [name address] :as account} (<sub [:account-by-address selected-account])
+  (let [;{:keys [name address] :as account} (<sub [:account-by-address selected-account])
         currency        (<sub [:wallet/currency])
         portfolio-value (<sub [:account-portfolio-value selected-account])
         width (<sub [:dimensions/window-width])
         button-width (/ (- width 40 (* 2 12)) 3)]
     ;fetching-error (<sub [:wallet/fetching-error])]
     [react/view {:flex                   1
-                 :background-color (quo2.colors/theme-colors quo2.colors/white quo2.colors/neutral-80)
+                 :background-color (quo2.colors/theme-colors quo2.colors/white quo2.colors/neutral-90)
                  :border-top-left-radius 20
                  :border-top-right-radius 20
                  :elevation              4
@@ -266,14 +266,15 @@
      [react/view {:padding 20}
       [quo2.text/text {:size :heading-2 :weight :semi-bold} (str portfolio-value " " (:code currency))]]
      [react/view
-      [react/scroll-view {:horizontal true :margin-left 20 :margin-bottom 32}
-       [quo2.button/button {:size 56 :width button-width :above :main-icons/close} "Buy"]
+      [react/scroll-view {:horizontal true :margin-left 20 :margin-bottom 32 :showsHorizontalScrollIndicator false}
+       [quo2.button/button {:size 56 :width button-width :above :main-icons2/placeholder} "Buy"]
        [react/view {:width 12}]
-       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons/close} "Send"]
+       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons2/placeholder} "Send"]
        [react/view {:width 12}]
-       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons/close} "Receive"]
+       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons2/placeholder} "Receive"]
        [react/view {:width 12}]
-       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons/close} "Swap"]]]
+       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons2/placeholder} "Swap"]
+       [react/view {:width 20}]]]
      [assets-and-collections-new selected-account]]))
 
 (views/defview account []

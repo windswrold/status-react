@@ -17,7 +17,8 @@
             [quo2.components.text :as quo2.text]
             [quo2.components.tabs :as quo2.tabs]
             [status-im.ui.screens.wallet.accounts.common :as common]
-            [status-im.ui.screens.wallet.account.views :as account.views])
+            [status-im.ui.screens.wallet.account.views :as account.views]
+            [quo.components.safe-area :as safe-area])
   (:require-macros [status-im.utils.views :as views]))
 
 (views/defview account-card [{:keys [name color address type wallet] :as account} keycard? card-width]
@@ -180,10 +181,10 @@
 
 (views/defview total-value []
   (views/letsubs [currency [:wallet/currency]
-                  portfolio-value [:portfolio-value]
-                  empty-balances? [:empty-balances?]
-                  frozen-card? [:keycard/frozen-card?]
-                  {:keys [mnemonic]} [:multiaccount]]
+                  portfolio-value [:portfolio-value]]
+                  ;empty-balances? [:empty-balances?]
+                  ;frozen-card? [:keycard/frozen-card?]
+                  ;{:keys [mnemonic]} [:multiaccount]]
     [react/view {:padding-vertical 12}
      [quo2.text/text (i18n/label :t/wallet-total-value)]
      [quo2.text/text {:size :heading-1 :weight :semi-bold}
@@ -237,8 +238,8 @@
            (i18n/label :t/wallet-total-value)]])]))
 
 (views/defview accounts [selected-account-atom]
-  (views/letsubs [accounts [:multiaccount/visible-accounts]
-                  keycard? [:keycard-multiaccount?]]
+  (views/letsubs [accounts [:multiaccount/visible-accounts]]
+                  ;keycard? [:keycard-multiaccount?]]
     (do
       (reset! selected-account-atom (:address (first accounts)))
       (let [accounts-data (for [account accounts]
@@ -262,30 +263,35 @@
 
 (defn accounts-overview []
   (let [mnemonic @(re-frame/subscribe [:mnemonic])
-        mainnet? @(re-frame/subscribe [:mainnet?])
+        ;mainnet? @(re-frame/subscribe [:mainnet?])
         selected-account-atom (reagent/atom nil)]
     (fn []
-      [react/view {:style {:flex             1
-                           :background-color (quo2.colors/theme-colors quo2.colors/neutral-5 quo2.colors/neutral-95)}}
-       [react/view {:padding-horizontal 20}
-        [react/view {:flex-direction :row :height 56 :align-items :center :justify-content :flex-end}
-         [quo2.button/button {:icon                true
-                              :type                :grey
-                              :accessibility-label :accounts-qr-code
-                              :on-press            #(re-frame/dispatch
-                                                     [::qr-scanner/scan-code
-                                                      {:handler :wallet.send/qr-scanner-result}])}
-          :main-icons/qr]
-         [react/view {:width 12}]
-         [quo2.button/button {:icon                true
-                              :type                :grey
-                              :on-press            #(re-frame/dispatch [:bottom-sheet/show-sheet
-                                                                        {:content (sheets/accounts-options mnemonic)}])
-                              :accessibility-label :accounts-more-options}
-          :main-icons/more]]
-        [total-value]
-        [accounts selected-account-atom]]
-       [account.views/account-new @selected-account-atom]])))
+      [safe-area/consumer
+       (fn [insets]
+         [react/view {:style {:flex             1
+                              :padding-top      (:top insets)
+                              :background-color (quo2.colors/theme-colors quo2.colors/neutral-5 quo2.colors/neutral-95)}}
+          [react/view {:padding-horizontal 20}
+           [react/view {:flex-direction :row :height 56 :align-items :center :justify-content :flex-end}
+            [quo2.button/button {:icon                true
+                                 :size 32
+                                 :type                :grey
+                                 :accessibility-label :accounts-qr-code
+                                 :on-press            #(re-frame/dispatch
+                                                        [::qr-scanner/scan-code
+                                                         {:handler :wallet.send/qr-scanner-result}])}
+             :main-icons2/placeholder]
+            [react/view {:width 12}]
+            [quo2.button/button {:icon                true
+                                 :size  32
+                                 :type                :grey
+                                 :on-press            #(re-frame/dispatch [:bottom-sheet/show-sheet
+                                                                           {:content (sheets/accounts-options mnemonic)}])
+                                 :accessibility-label :accounts-more-options}
+             :main-icons2/placeholder]]
+           [total-value]
+           [accounts selected-account-atom]]
+          [account.views/account-new @selected-account-atom]])])))
 
 (defn accounts-overview-old []
   (let [mnemonic @(re-frame/subscribe [:mnemonic])

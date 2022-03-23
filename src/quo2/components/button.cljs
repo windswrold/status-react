@@ -1,10 +1,10 @@
 (ns quo2.components.button
   (:require [quo.react-native :as rn]
-            [status-im.ui.components.icons.icons :as icons]
             [quo2.foundations.colors :as colors]
             [quo2.components.text :as text]
             [quo.theme :as theme]
-            [reagent.core :as reagent]))
+            [reagent.core :as reagent]
+            [quo2.components.icon :as quo2.icons]))
 
 (def themes {:light {:primary   {:icon-color       colors/white
                                  :label            {:style {:color colors/white}}
@@ -61,7 +61,7 @@
                                                     :pressed  colors/danger-40
                                                     :disabled colors/danger-50}}}})
 
-(defn style-container [type size disabled background-color border-color icon above width]
+(defn style-container [type size disabled background-color border-color icon above width before after]
   (merge {:height             size
           :align-items        :center
           :justify-content    :center
@@ -74,7 +74,12 @@
                                   32 10
                                   24 8))
           :background-color   background-color
-          :padding-horizontal (if icon 0 (case size 56 16 40 16 32 12 24 8))}
+          :padding-horizontal (when-not (or icon before after)
+                                (case size 56 16 40 16 32 12 24 8))
+          :padding-left       (when-not (or icon before)
+                                (case size 56 16 40 16 32 12 24 8))
+          :padding-right      (when-not (or icon after)
+                                (case size 56 16 40 16 32 12 24 8))}
          (when width
            {:width width})
          (when icon
@@ -106,7 +111,8 @@
          children]
       (let [{:keys [icon-color background-color label border-color]}
             (get-in themes [(theme/get-theme) type])
-            state (cond disabled :disabled @pressed :pressed :else :default)]
+            state (cond disabled :disabled @pressed :pressed :else :default)
+            icon-size (when (= 24 size) 12)]
         [rn/touchable-without-feedback (merge {:disabled            disabled
                                                :accessibility-label accessibility-label}
                                               (when on-press
@@ -128,17 +134,25 @@
                            (get border-color state)
                            icon
                            above
-                           width)}
+                           width
+                           before
+                           after)}
           (when above
             [rn/view
-             [icons/icon above {:color icon-color}]])
+             [quo2.icons/icon above {:container-style {:margin-bottom 2}
+                                     :color           icon-color
+                                     :size            icon-size}]])
           (when before
             [rn/view
-             [icons/icon before {:color icon-color}]])
+             [quo2.icons/icon before {:container-style {:margin-left  (if (= size 40) 12 8)
+                                                        :margin-right 4}
+                                      :color           icon-color
+                                      :size            icon-size}]])
           [rn/view
            (cond
              icon
-             [icons/icon children {:color icon-color}]
+             [quo2.icons/icon children {:color icon-color
+                                        :size  icon-size}]
 
              (string? children)
              [text/text (merge {:size            (when (#{56 24} size) :paragraph-2)
@@ -151,4 +165,7 @@
              children)]
           (when after
             [rn/view
-             [icons/icon after {:color icon-color}]])]]))))
+             [quo2.icons/icon after {:container-style {:margin-left  4
+                                                       :margin-right (if (= size 40) 12 8)}
+                                     :color           icon-color
+                                     :size            icon-size}]])]]))))
