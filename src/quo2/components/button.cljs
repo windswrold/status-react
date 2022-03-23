@@ -61,7 +61,7 @@
                                                     :pressed  colors/danger-40
                                                     :disabled colors/danger-50}}}})
 
-(defn style-container [type size disabled background-color border-color icon above]
+(defn style-container [type size disabled background-color border-color icon above width]
   (merge {:height             size
           :align-items        :center
           :justify-content    :center
@@ -75,6 +75,8 @@
                                   24 8))
           :background-color   background-color
           :padding-horizontal (if icon 0 (case size 56 16 40 16 32 12 24 8))}
+         (when width
+           {:width width})
          (when icon
            {:width size})
          (when border-color
@@ -97,7 +99,7 @@
    [button {:icon true} :main-icons/close-circle]"
   [_ _]
   (let [pressed (reagent/atom false)]
-    (fn [{:keys [on-press disabled type size before after above
+    (fn [{:keys [on-press disabled type size before after above width
                  on-long-press accessibility-label icon]
           :or   {type :primary
                  size 40}}
@@ -118,7 +120,15 @@
                                               {:on-press-out (fn []
                                                                (reset! pressed nil))})
 
-         [rn/view {:style (style-container type size disabled (get background-color state) (get border-color state) icon above)}
+         [rn/view {:style (style-container
+                           type
+                           size
+                           disabled
+                           (get background-color state)
+                           (get border-color state)
+                           icon
+                           above
+                           width)}
           (when above
             [rn/view
              [icons/icon above {:color icon-color}]])

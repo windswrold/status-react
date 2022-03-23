@@ -113,7 +113,8 @@
     (let [tab @selected-tab]
       [react/view {:flex 1}
        [react/view {:padding-horizontal 20 :padding-bottom 20}
-        [quo2.tabs/tabs {:on-change #(reset! selected-tab %)
+        [quo2.tabs/tabs {:size 24
+                         :on-change #(reset! selected-tab %)
                          :default-active :tokens
                          :data [{:id :tokens :label "Tokens"}
                                 {:id :nft :label "NFTs"}
@@ -249,7 +250,9 @@
 (defn account-new [selected-account]
   (let [{:keys [name address] :as account} (<sub [:account-by-address selected-account])
         currency        (<sub [:wallet/currency])
-        portfolio-value (<sub [:account-portfolio-value selected-account])]
+        portfolio-value (<sub [:account-portfolio-value selected-account])
+        width (<sub [:dimensions/window-width])
+        button-width (/ (- width 40 (* 2 12)) 3)]
     ;fetching-error (<sub [:wallet/fetching-error])]
     [react/view {:flex                   1
                  :background-color (quo2.colors/theme-colors quo2.colors/white quo2.colors/neutral-80)
@@ -264,13 +267,13 @@
       [quo2.text/text {:size :heading-2 :weight :semi-bold} (str portfolio-value " " (:code currency))]]
      [react/view
       [react/scroll-view {:horizontal true :margin-left 20 :margin-bottom 32}
-       [quo2.button/button {:size 56 :above :main-icons/close} "Buy"]
+       [quo2.button/button {:size 56 :width button-width :above :main-icons/close} "Buy"]
        [react/view {:width 12}]
-       [quo2.button/button {:size 56 :above :main-icons/close} "Send"]
+       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons/close} "Send"]
        [react/view {:width 12}]
-       [quo2.button/button {:size 56 :above :main-icons/close} "Receive"]
+       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons/close} "Receive"]
        [react/view {:width 12}]
-       [quo2.button/button {:size 56 :above :main-icons/close} "Swap"]]]
+       [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons/close} "Swap"]]]
      [assets-and-collections-new selected-account]]))
 
 (views/defview account []
