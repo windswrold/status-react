@@ -266,7 +266,8 @@
      [react/view {:padding 20}
       [quo2.text/text {:size :heading-2 :weight :semi-bold} (str portfolio-value " " (:code currency))]]
      [react/view
-      [react/scroll-view {:horizontal true :margin-left 20 :margin-bottom 32 :showsHorizontalScrollIndicator false}
+      [react/scroll-view {:horizontal true :margin-bottom 32 :showsHorizontalScrollIndicator false}
+       [react/view {:width 20}]
        [quo2.button/button {:size 56 :width button-width :above :main-icons2/placeholder} "Buy"]
        [react/view {:width 12}]
        [quo2.button/button {:size 56 :width button-width :type :secondary :above :main-icons2/placeholder} "Send"]
